@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, ChefHat, TrendingUp, Users, Clock, Shield, CheckCircle, ArrowRight, Menu, X, Play, Phone, Mail, MapPin, Zap, BarChart3, Globe } from 'lucide-react';
+import { Star, ChefHat, CheckCircle, Menu, X, Play, Zap, BarChart3, Globe, Shield } from 'lucide-react';
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -120,7 +119,7 @@ const LandingPage = () => {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <ChefHat className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-lg font-semibold text-foreground">RestaurantOS</span>
+              <span className="text-lg font-semibold text-foreground">ResQr</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -128,8 +127,8 @@ const LandingPage = () => {
               <a href="#features" className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">Features</a>
               <a href="#pricing" className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">Pricing</a>
               <a href="#testimonials" className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">Customers</a>
-              <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:bg-muted">
-                Sign In
+              <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:bg-muted" asChild>
+                <a href="/sign-in">Sign In</a>
               </Button>
               <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 Get Started
@@ -155,8 +154,8 @@ const LandingPage = () => {
                 <a href="#pricing" className="text-muted-foreground hover:text-foreground text-sm font-medium">Pricing</a>
                 <a href="#testimonials" className="text-muted-foreground hover:text-foreground text-sm font-medium">Customers</a>
                 <div className="flex flex-col space-y-2 pt-4">
-                  <Button variant="outline" size="sm" className="border-border text-muted-foreground">
-                    Sign In
+                  <Button variant="outline" size="sm" className="border-border text-muted-foreground" asChild>
+                    <a href="/sign-in">Sign In</a>
                   </Button>
                   <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     Get Started
@@ -427,7 +426,7 @@ const LandingPage = () => {
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <ChefHat className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <span className="text-lg font-semibold text-foreground">RestaurantOS</span>
+                <span className="text-lg font-semibold text-foreground">ResQr</span>
               </div>
               <p className="text-muted-foreground text-sm">
                 Modern restaurant management for the digital age.
@@ -467,7 +466,7 @@ const LandingPage = () => {
 
           <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-muted-foreground text-sm">
-              © 2025 RestaurantOS. All rights reserved.
+              © 2025 ResQr. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm text-muted-foreground mt-4 md:mt-0">
               <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
