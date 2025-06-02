@@ -5,6 +5,9 @@ import { Pool } from "pg";
 
 
 export const auth = betterAuth({
+    trustedOrigins: [
+        "*.shrivatsav.dev"
+    ],
     database: new Pool({
         connectionString: process.env.DATABASE_URL,
     }),
@@ -18,6 +21,7 @@ export const auth = betterAuth({
         expiresIn: 60 * 60,
         autoSignInAfterVerification: true,
 
+
         sendVerificationEmail: async ({ user, url }) => {
             await sendEmail({
                 to: user.email,
@@ -27,7 +31,8 @@ export const auth = betterAuth({
                 }
 
             })
-        }
+        },
+
     },
 
 
