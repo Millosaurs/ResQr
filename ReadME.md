@@ -466,7 +466,7 @@ NEXT_PUBLIC_APP_URL=
 
 ## Development Timeline
 
-- **Week 1-2**: Authentication, database setup, basic UI components
+- **Week 1-2**: Authentication, database setup, basic UI components 👌
 - **Week 3-4**: Onboarding flow and restaurant management
 - **Week 5-6**: Menu builder with full CRUD operations
 - **Week 7-8**: QR generation and public menu display
