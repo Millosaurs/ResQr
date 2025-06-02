@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, ChefHat, CheckCircle, Menu, X, Play, Zap, BarChart3, Globe, Shield } from 'lucide-react';
+import { useSession } from '@/lib/auth-client';
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -124,13 +126,20 @@ const LandingPage = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-
-              <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:bg-muted" asChild>
-                <a href="/sign-in">Sign In</a>
-              </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                Get Started
-              </Button>
+              {session ? (
+                <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:bg-muted" asChild>
+                  <a href="/dashboard">Dashboard</a>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:bg-muted" asChild>
+                    <a href="/sign-in">Sign In</a>
+                  </Button>
+                  <Button size="sm" className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <a href="/sign-up">Get Started</a>
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -152,12 +161,20 @@ const LandingPage = () => {
                 <a href="#pricing" className="text-muted-foreground hover:text-foreground text-sm font-medium">Pricing</a>
                 <a href="#testimonials" className="text-muted-foreground hover:text-foreground text-sm font-medium">Customers</a>
                 <div className="flex flex-col space-y-2 pt-4">
-                  <Button variant="outline" size="sm" className="border-border text-muted-foreground" asChild>
-                    <a href="/sign-in">Sign In</a>
-                  </Button>
-                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    Get Started
-                  </Button>
+                  {session ? (
+                    <Button variant="outline" size="sm" className="border-border text-muted-foreground" asChild>
+                      <a href="/dashboard">Dashboard</a>
+                    </Button>
+                  ) : (
+                    <>
+                      <Button variant="outline" size="sm" className="border-border text-muted-foreground" asChild>
+                        <a href="/sign-in">Sign In</a>
+                      </Button>
+                      <Button size="sm" className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <a href="/sign-up">Get Started</a>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

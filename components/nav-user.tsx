@@ -29,6 +29,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { signOut, useSession } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
 
 export type NavUserProps = {
   user: {
@@ -46,6 +47,7 @@ export type NavUserProps = {
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
   const { data: session, isPending } = useSession()
+  const router = useRouter()
 
   if (!session) return null
   if (isPending) return null
@@ -124,7 +126,10 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer bg-primary text-primary-foreground" onClick={() => signOut()}>
+            <DropdownMenuItem className="cursor-pointer bg-primary text-primary-foreground" onClick={() => {
+              signOut()
+              router.push("/")
+            }}>
               <IconLogout className="text-primary-foreground" />
               Log out
             </DropdownMenuItem>

@@ -11,6 +11,7 @@ import { signIn, useSession } from "@/lib/auth-client";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function SignIn() {
     const [email, setEmail] = useState("");
@@ -123,17 +124,28 @@ export default function SignIn() {
                                                     password
                                                 },
                                                 {
-                                                    onRequest: (ctx) => {
-                                                        setLoading(true);
+                                                    onRequest: () => setLoading(true),
+                                                    onResponse: () => setLoading(false),
+                                                    onError: (ctx) => {
+                                                        let message = "Sign in failed.";
+                                                        if (ctx?.error?.code === "EMAIL_NOT_VERIFIED") {
+                                                            message = "Email not verified. Please check your inbox.";
+                                                        } else if (ctx?.error?.message) {
+                                                            message = ctx.error.message;
+                                                        } else if (ctx?.error?.status === 0) {
+                                                            message = "Connection issue. Please try again.";
+                                                        }
+                                                        toast.error(message, {
+                                                            className: "bg-destructive text-destructive-foreground border border-destructive rounded-lg px-4 py-3 text-sm font-medium shadow-xl",
+                                                        });
                                                     },
-                                                    onResponse: (ctx) => {
-                                                        setLoading(false);
-                                                    },
-                                                    onError: (error) => {
-                                                        console.error(error);
-                                                    },
-                                                    onSuccess: (data) => {
-                                                        console.log(data);
+                                                    onSuccess: (ctx) => {
+                                                        if (ctx?.data && ctx.data.emailVerified === false) {
+                                                            toast.error("Please verify your email before logging in.", {
+                                                                className: "bg-destructive text-destructive-foreground border border-destructive rounded-lg px-4 py-3 text-sm font-medium shadow-xl",
+                                                            });
+                                                            return;
+                                                        }
                                                         router.push("/dashboard");
                                                     }
                                                 },

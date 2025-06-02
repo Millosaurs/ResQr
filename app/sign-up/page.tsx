@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
+import * as Dialog from "@radix-ui/react-dialog";
 
 export default function SignUp() {
     const [firstName, setFirstName] = useState("");
@@ -31,6 +32,7 @@ export default function SignUp() {
     const router = useRouter();
     const { data: session, isPending } = useSession();
     const [loading, setLoading] = useState(false);
+    const [showVerifyDialog, setShowVerifyDialog] = useState(false);
 
     useEffect(() => {
         if (session) {
@@ -207,7 +209,7 @@ export default function SignUp() {
                                                         toast.error(ctx.error.message);
                                                     },
                                                     onSuccess: async () => {
-                                                        router.push("/dashboard");
+                                                        setShowVerifyDialog(false);
                                                     },
                                                 },
                                             });
@@ -219,6 +221,20 @@ export default function SignUp() {
                                             "Create an account"
                                         )}
                                     </Button>
+                                    {/* Email Verification Dialog */}
+                                    <Dialog.Root open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
+                                        <Dialog.Portal>
+                                            <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
+                                            <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-card p-8 shadow-xl border border-border flex flex-col items-center">
+                                                <Dialog.Title className="text-xl font-bold text-foreground mb-2">Verify your email</Dialog.Title>
+                                                <Dialog.Description className="text-muted-foreground text-center mb-4">
+                                                    We have sent a verification link to <span className="font-semibold">{email}</span>.<br />
+                                                    Please check your inbox and follow the instructions to activate your account.
+                                                </Dialog.Description>
+                                                <Button onClick={() => setShowVerifyDialog(false)} className="mt-2 w-full">Close</Button>
+                                            </Dialog.Content>
+                                        </Dialog.Portal>
+                                    </Dialog.Root>
                                 </div>
                             </CardContent>
                             <CardFooter>
