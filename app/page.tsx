@@ -124,9 +124,7 @@ const LandingPage = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">Features</a>
-              <a href="#pricing" className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">Pricing</a>
-              <a href="#testimonials" className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors">Customers</a>
+
               <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:bg-muted" asChild>
                 <a href="/sign-in">Sign In</a>
               </Button>
