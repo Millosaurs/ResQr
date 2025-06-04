@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, ArrowRight, Check, ChefHat } from "lucide-react";
 import Link from "next/link";
+import ImgUpload from "@/components/imgUpload";
 
 // Email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -55,7 +56,7 @@ export default function OnboardingPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   // Form validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,7 +65,7 @@ export default function OnboardingPage() {
   const [restaurantData, setRestaurantData] = useState({
     name: "",
     address: "",
-    countryCode: "+1", // Default country code
+    countryCode: "+1",
     phone: "",
     email: "",
     googleBusinessUrl: "",
@@ -132,6 +133,7 @@ export default function OnboardingPage() {
         ...prev,
         logoUrl: tempUrl,
       }));
+      console.log("Url:" + tempUrl);
     }
   };
 
@@ -205,28 +207,34 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
-      // TODO: Add API call to create restaurant in the database
-      // const response = await fetch('/api/restaurants', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     ...restaurantData,
-      //     phone: restaurantData.countryCode + restaurantData.phone,
-      //     ownerId: session?.user?.id,
-      //   }),
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('Failed to create restaurant');
-      // }
+      const response = await fetch("/api/restaurants", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...restaurantData,
+          phone: restaurantData.phone
+            ? restaurantData.countryCode + restaurantData.phone
+            : null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create restaurant");
+      }
 
       toast.success("Restaurant created successfully!");
       router.push("/dashboard");
     } catch (error) {
       console.error("Error creating restaurant:", error);
-      toast.error("Failed to create restaurant. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create restaurant. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -435,12 +443,7 @@ export default function OnboardingPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="logoUpload">Restaurant Logo</Label>
-                <Input
-                  id="logoUpload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                />
+                <ImgUpload />
                 {restaurantData.logoUrl && (
                   <div className="mt-2">
                     <img
@@ -531,7 +534,13 @@ export default function OnboardingPage() {
                   Next <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" disabled={loading}>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  onClick={() => {
+                    router.push("/dashboard");
+                  }}
+                >
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
@@ -539,7 +548,7 @@ export default function OnboardingPage() {
                     </>
                   ) : (
                     <>
-                      <Check className="mr-2 h-4 w-4" /> Complete Setup
+                      <Check className="h-4 w-4" /> Complete Setup
                     </>
                   )}
                 </Button>

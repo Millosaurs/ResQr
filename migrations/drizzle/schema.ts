@@ -1,17 +1,7 @@
-import { pgTable, unique, text, boolean, timestamp, foreignKey } from "drizzle-orm/pg-core"
+import { pgTable, foreignKey, unique, text, timestamp, uuid, varchar, boolean } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
-export const user = pgTable("user", {
-	id: text().primaryKey().notNull(),
-	name: text().notNull(),
-	email: text().notNull(),
-	emailVerified: boolean().notNull(),
-	image: text(),
-	createdAt: timestamp({ mode: 'string' }).notNull(),
-	updatedAt: timestamp({ mode: 'string' }).notNull(),
-}, (table) => [
-	unique("user_email_key").on(table.email),
-]);
+
 
 export const session = pgTable("session", {
 	id: text().primaryKey().notNull(),
@@ -61,3 +51,41 @@ export const verification = pgTable("verification", {
 	createdAt: timestamp({ mode: 'string' }),
 	updatedAt: timestamp({ mode: 'string' }),
 });
+
+export const restaurants = pgTable("restaurants", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	ownerId: text("owner_id").notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	address: text(),
+	phone: varchar({ length: 20 }),
+	email: varchar({ length: 255 }),
+	googleBusinessUrl: text("google_business_url"),
+	googleRating: varchar("google_rating", { length: 3 }),
+	cuisineType: varchar("cuisine_type", { length: 100 }),
+	description: text(),
+	logoUrl: text("logo_url"),
+	colorTheme: varchar("color_theme", { length: 7 }).default('#000000'),
+	isActive: boolean("is_active").default(true),
+	subscriptionTier: varchar("subscription_tier", { length: 20 }).default('FREE'),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	foreignKey({
+			columns: [table.ownerId],
+			foreignColumns: [user.id],
+			name: "restaurants_owner_id_user_id_fk"
+		}).onDelete("cascade"),
+]);
+
+export const user = pgTable("user", {
+	id: text().primaryKey().notNull(),
+	name: text().notNull(),
+	email: text().notNull(),
+	emailVerified: boolean().notNull(),
+	image: text(),
+	createdAt: timestamp({ mode: 'string' }).notNull(),
+	updatedAt: timestamp({ mode: 'string' }).notNull(),
+	hasRestaurant: boolean(),
+}, (table) => [
+	unique("user_email_key").on(table.email),
+]);
