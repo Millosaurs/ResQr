@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   IconCreditCard,
@@ -6,13 +6,9 @@ import {
   IconLogout,
   IconNotification,
   IconUserCircle,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,36 +17,36 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { signOut, useSession } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
+} from "@/components/ui/sidebar";
+import { signOut, useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export type NavUserProps = {
   user: {
-    id: string
-    name: string
-    email: string
-    emailVerified: boolean
-    createdAt: Date
-    updatedAt: Date
-    image?: string | null
-    avatar?: string | null // if you use avatar elsewhere
-  }
-}
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    image?: string | null;
+    avatar?: string | null; // if you use avatar elsewhere
+  };
+};
 
 export function NavUser({ user }: NavUserProps) {
-  const { isMobile } = useSidebar()
-  const { data: session, isPending } = useSession()
-  const router = useRouter()
+  const { isMobile } = useSidebar();
+  const { data: session, isPending } = useSession();
+  const router = useRouter();
 
-  if (!session) return null
-  if (isPending) return null
+  if (!session) return null;
+  if (isPending) return null;
 
   return (
     <SidebarMenu>
@@ -62,19 +58,24 @@ export function NavUser({ user }: NavUserProps) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={session.user.image ?? ""} alt={session.user.name} />
-                <AvatarFallback className="rounded-lg">{
-                  session.user.name
+                <AvatarImage
+                  src={session.user.image ?? ""}
+                  alt={session.user.name}
+                />
+                <AvatarFallback className="rounded-lg">
+                  {session.user.name
                     ? session.user.name
-                      .split(" ")
-                      .map((n: string) => n[0] || "")
-                      .join("")
-                      .toUpperCase()
-                    : "CN"
-                }</AvatarFallback>
+                        .split(" ")
+                        .map((n: string) => n[0] || "")
+                        .join("")
+                        .toUpperCase()
+                    : "CN"}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{session.user.name}</span>
+                <span className="truncate font-medium">
+                  {session.user.name}
+                </span>
                 <span className="text-muted-foreground truncate text-xs">
                   {session.user.email}
                 </span>
@@ -91,19 +92,24 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={session.user.image ?? ""} alt={session.user.name} />
-                  <AvatarFallback className="rounded-lg">{
-                    session.user.name
+                  <AvatarImage
+                    src={session.user.image ?? ""}
+                    alt={session.user.name}
+                  />
+                  <AvatarFallback className="rounded-lg">
+                    {session.user.name
                       ? session.user.name
-                        .split(" ")
-                        .map((n: string) => n[0] || "")
-                        .join("")
-                        .toUpperCase()
-                      : "+"
-                  }</AvatarFallback>
+                          .split(" ")
+                          .map((n: string) => n[0] || "")
+                          .join("")
+                          .toUpperCase()
+                      : "+"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{session.user.name}</span>
+                  <span className="truncate font-medium">
+                    {session.user.name}
+                  </span>
                   <span className="text-muted-foreground truncate text-xs">
                     {session.user.email}
                   </span>
@@ -112,7 +118,11 @@ export function NavUser({ user }: NavUserProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push("/dashboard/account");
+                }}
+              >
                 <IconUserCircle />
                 Account
               </DropdownMenuItem>
@@ -126,10 +136,13 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer bg-primary text-primary-foreground" onClick={() => {
-              signOut()
-              router.push("/")
-            }}>
+            <DropdownMenuItem
+              className="cursor-pointer bg-primary text-primary-foreground"
+              onClick={() => {
+                signOut();
+                router.push("/");
+              }}
+            >
               <IconLogout className="text-primary-foreground" />
               Log out
             </DropdownMenuItem>
@@ -137,5 +150,5 @@ export function NavUser({ user }: NavUserProps) {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

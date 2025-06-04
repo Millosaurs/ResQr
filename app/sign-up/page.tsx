@@ -209,7 +209,8 @@ export default function SignUp() {
                                                         toast.error(ctx.error.message);
                                                     },
                                                     onSuccess: async () => {
-                                                        setShowVerifyDialog(false);
+                                                        setShowVerifyDialog(true);
+
                                                     },
                                                 },
                                             });
@@ -231,7 +232,10 @@ export default function SignUp() {
                                                     We have sent a verification link to <span className="font-semibold">{email}</span>.<br />
                                                     Please check your inbox and follow the instructions to activate your account.
                                                 </Dialog.Description>
-                                                <Button onClick={() => setShowVerifyDialog(false)} className="mt-2 w-full">Close</Button>
+                                                <Button onClick={() => {
+                                                    setShowVerifyDialog(false);
+                                                    router.push('/sign-in');
+                                                }} className="mt-2 w-full">Close</Button>
                                             </Dialog.Content>
                                         </Dialog.Portal>
                                     </Dialog.Root>
@@ -251,6 +255,7 @@ export default function SignUp() {
                 </div>
             </div>
         </div>
+
     );
 }
 
