@@ -72,6 +72,7 @@ export default function OnboardingPage() {
     googleRating: "",
     cuisineType: "",
     description: "",
+    logoImageId: null as number | null,
     logoUrl: "",
     colorTheme: "#000000",
     subscriptionTier: "FREE",
@@ -121,19 +122,55 @@ export default function OnboardingPage() {
     }
   };
 
-  // Handle logo upload
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // In a real implementation, you would upload this to a storage service
-      // and get back a URL to store in the database
-      // For now, we'll just create a temporary URL
-      const tempUrl = URL.createObjectURL(file);
+  // Handle logo upload success
+  const handleLogoUploadSuccess = async (imageData: {
+    id: number;
+    fileName: string;
+    imageUrl: string;
+    imagekitFileId: string;
+  }) => {
+    setRestaurantData((prev) => ({
+      ...prev,
+      logoImageId: imageData.id,
+      logoUrl: imageData.imageUrl,
+    }));
+
+    toast.success("Logo uploaded successfully!");
+  };
+
+  // Handle logo removal
+  const handleLogoRemove = async () => {
+    if (restaurantData.logoImageId) {
+      try {
+        const response = await fetch(
+          `/api/upload?id=${restaurantData.logoImageId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to delete logo");
+        }
+
+        setRestaurantData((prev) => ({
+          ...prev,
+          logoImageId: null,
+          logoUrl: "",
+        }));
+
+        toast.success("Logo removed successfully");
+      } catch (error) {
+        console.error("Error removing logo:", error);
+        toast.error("Failed to remove logo");
+      }
+    } else {
+      // Just clear the form data if no logo was uploaded yet
       setRestaurantData((prev) => ({
         ...prev,
-        logoUrl: tempUrl,
+        logoImageId: null,
+        logoUrl: "",
       }));
-      console.log("Url:" + tempUrl);
     }
   };
 
@@ -207,23 +244,56 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
+      // Prepare the restaurant data payload
+      const restaurantPayload = {
+        name: restaurantData.name.trim(),
+        address: restaurantData.address.trim() || null,
+        phone: restaurantData.phone
+          ? restaurantData.countryCode + restaurantData.phone
+          : null,
+        email: restaurantData.email.trim() || null,
+        googleBusinessUrl: restaurantData.googleBusinessUrl.trim() || null,
+        googleRating: restaurantData.googleRating
+          ? parseFloat(restaurantData.googleRating)
+          : null,
+        cuisineType: restaurantData.cuisineType || null,
+        description: restaurantData.description.trim() || null,
+        logoImageId: restaurantData.logoImageId, // This links the uploaded image to the restaurant
+        colorTheme: restaurantData.colorTheme,
+        subscriptionTier: restaurantData.subscriptionTier,
+      };
+
       const response = await fetch("/api/restaurants", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...restaurantData,
-          phone: restaurantData.phone
-            ? restaurantData.countryCode + restaurantData.phone
-            : null,
-        }),
+        body: JSON.stringify(restaurantPayload),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to create restaurant");
+      }
+
+      // Update the uploaded image record to associate it with the restaurant
+      if (restaurantData.logoImageId) {
+        try {
+          await fetch(`/api/upload/${restaurantData.logoImageId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              restaurantId: data.data.id,
+              isLinked: true,
+            }),
+          });
+        } catch (error) {
+          console.error("Error linking logo to restaurant:", error);
+          // Don't fail the restaurant creation for this
+        }
       }
 
       toast.success("Restaurant created successfully!");
@@ -235,6 +305,21 @@ export default function OnboardingPage() {
           ? error.message
           : "Failed to create restaurant. Please try again."
       );
+
+      // If restaurant creation failed and we have an uploaded logo,
+      // consider cleaning it up (optional)
+      if (restaurantData.logoImageId) {
+        try {
+          await fetch(`/api/upload?id=${restaurantData.logoImageId}`, {
+            method: "DELETE",
+          });
+        } catch (cleanupError) {
+          console.error(
+            "Error cleaning up logo after failed restaurant creation:",
+            cleanupError
+          );
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -442,16 +527,20 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="logoUpload">Restaurant Logo</Label>
-                <ImgUpload />
-                {restaurantData.logoUrl && (
-                  <div className="mt-2">
-                    <img
-                      src={restaurantData.logoUrl}
-                      alt="Logo Preview"
-                      className="w-24 h-24 object-contain border rounded"
-                    />
-                  </div>
+                <Label>Restaurant Logo</Label>
+                <ImgUpload
+                  onUploadSuccess={handleLogoUploadSuccess}
+                  currentImageUrl={restaurantData.logoUrl}
+                  onRemove={handleLogoRemove}
+                  label=""
+                  maxSizeMB={5}
+                />
+                {restaurantData.logoImageId && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <Check className="w-4 h-4" />
+                    Logo uploaded successfully (ID: {restaurantData.logoImageId}
+                    )
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
@@ -500,7 +589,7 @@ export default function OnboardingPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4 bg-background">
-        <Card className="w-full max-w-2xl shadow-lg border-opacity-50 mt-8">
+        <Card className="w-full max-w-4xl h-fullshadow-lg border-opacity-50 mt-8">
           <form onSubmit={handleSubmit}>
             <div className="mb-4 px-6 pt-6">
               <div className="flex items-center justify-between mb-2">
@@ -534,13 +623,7 @@ export default function OnboardingPage() {
                   Next <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  onClick={() => {
-                    router.push("/dashboard");
-                  }}
-                >
+                <Button type="submit" disabled={loading}>
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}

@@ -4,9 +4,11 @@ import {
   unique,
   text,
   timestamp,
-  uuid,
-  varchar,
   boolean,
+  serial,
+  varchar,
+  uuid,
+  integer,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -67,6 +69,44 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp({ mode: "string" }),
 });
 
+export const user = pgTable(
+  "user",
+  {
+    id: text().primaryKey().notNull(),
+    name: text().notNull(),
+    email: text().notNull(),
+    emailVerified: boolean().notNull(),
+    image: text(),
+    createdAt: timestamp({ mode: "string" }).notNull(),
+    updatedAt: timestamp({ mode: "string" }).notNull(),
+    hasRestaurant: boolean(),
+  },
+  (table) => [unique("user_email_key").on(table.email)]
+);
+
+export const images = pgTable(
+  "images",
+  {
+    id: serial().primaryKey().notNull(),
+    fileName: varchar("file_name", { length: 255 }).notNull(),
+    imageUrl: text("image_url").notNull(),
+    imagekitFileId: varchar("imagekit_file_id", { length: 100 }).notNull(),
+    uploadedBy: text("uploaded_by"),
+    imageType: varchar("image_type", { length: 50 }).default("general"),
+    uploadedAt: timestamp("uploaded_at", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.uploadedBy],
+      foreignColumns: [user.id],
+      name: "images_uploaded_by_user_id_fk",
+    }).onDelete("set null"),
+  ]
+);
+
 export const restaurants = pgTable(
   "restaurants",
   {
@@ -94,6 +134,7 @@ export const restaurants = pgTable(
       withTimezone: true,
       mode: "string",
     }).defaultNow(),
+    logoImageId: integer("logo_image_id"),
   },
   (table) => [
     foreignKey({
@@ -101,20 +142,10 @@ export const restaurants = pgTable(
       foreignColumns: [user.id],
       name: "restaurants_owner_id_user_id_fk",
     }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.logoImageId],
+      foreignColumns: [images.id],
+      name: "restaurants_logo_image_id_images_id_fk",
+    }).onDelete("set null"),
   ]
-);
-
-export const user = pgTable(
-  "user",
-  {
-    id: text().primaryKey().notNull(),
-    name: text().notNull(),
-    email: text().notNull(),
-    emailVerified: boolean().notNull(),
-    image: text(),
-    createdAt: timestamp({ mode: "string" }).notNull(),
-    updatedAt: timestamp({ mode: "string" }).notNull(),
-    hasRestaurant: boolean(),
-  },
-  (table) => [unique("user_email_key").on(table.email)]
 );
