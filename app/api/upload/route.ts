@@ -5,6 +5,7 @@ import { db } from "@/db"; // Your drizzle db instance
 import { images } from "@/db/schema"; // Your schema
 import { auth } from "@/lib/auth"; // Your auth function
 import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
 
 // Initialize ImageKit
 const imagekit = new ImageKit({
@@ -92,6 +93,72 @@ export async function POST(request: NextRequest) {
     console.error("Upload error:", error);
     return NextResponse.json(
       { error: "Failed to upload image" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    // Check authentication
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get image ID from query parameters
+    const { searchParams } = new URL(request.url);
+    const imageId = searchParams.get("id");
+
+    if (!imageId) {
+      return NextResponse.json(
+        { error: "Image ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Find the image in database
+    const [imageRecord] = await db
+      .select()
+      .from(images)
+      .where(eq(images.id, parseInt(imageId)))
+      .limit(1);
+
+    if (!imageRecord) {
+      return NextResponse.json({ error: "Image not found" }, { status: 404 });
+    }
+
+    // Check if user owns this image or has permission to delete it
+    if (imageRecord.uploadedBy !== session.user.id) {
+      return NextResponse.json(
+        { error: "You don't have permission to delete this image" },
+        { status: 403 }
+      );
+    }
+
+    try {
+      // Delete from ImageKit
+      await imagekit.deleteFile(imageRecord.imagekitFileId);
+    } catch (imagekitError) {
+      console.error("Error deleting from ImageKit:", imagekitError);
+      // Continue with database deletion even if ImageKit deletion fails
+      // This prevents orphaned database records
+    }
+
+    // Delete from database
+    await db.delete(images).where(eq(images.id, parseInt(imageId)));
+
+    return NextResponse.json({
+      success: true,
+      message: "Image deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete image" },
       { status: 500 }
     );
   }
