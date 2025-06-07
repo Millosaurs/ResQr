@@ -702,7 +702,25 @@ export default function MenuItemsManagement({
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
             <h3 className="text-lg font-semibold">Menu Items</h3>
             <Button
-              onClick={() => setItemDialogOpen(true)}
+              onClick={() => {
+                // Clear editing state and reset form for new item
+                setEditingItem(null);
+                setItemForm({
+                  name: "",
+                  description: "",
+                  price: "",
+                  estimatedTime: 15,
+                  ingredients: [],
+                  categoryId: "",
+                  isVegetarian: false,
+                  isVegan: false,
+                  isGlutenFree: false,
+                  isSpicy: false,
+                  isAvailable: true,
+                });
+                setIngredientInput(""); // Also clear ingredient input
+                setItemDialogOpen(true);
+              }}
               className="flex items-center gap-2 w-full sm:w-auto"
               disabled={categories.length === 0}
               size="sm"
@@ -974,7 +992,15 @@ export default function MenuItemsManagement({
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
             <h3 className="text-lg font-semibold">Categories</h3>
             <Button
-              onClick={() => setCategoryDialogOpen(true)}
+              onClick={() => {
+                setEditingCategory(null); // Clear editing state
+                setCategoryForm({
+                  name: "",
+                  description: "",
+                  isActive: true,
+                });
+                setCategoryDialogOpen(true);
+              }}
               className="flex items-center gap-2 w-full sm:w-auto"
               size="sm"
             >
@@ -1348,7 +1374,21 @@ export default function MenuItemsManagement({
       </Dialog>
 
       {/* Category Dialog - Responsive */}
-      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+      <Dialog
+        open={categoryDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            // Reset form when dialog is closed
+            setCategoryForm({
+              name: "",
+              description: "",
+              isActive: true,
+            });
+            setEditingCategory(null);
+          }
+          setCategoryDialogOpen(open);
+        }}
+      >
         <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4">
             <DialogTitle className="text-lg sm:text-xl">
