@@ -55,6 +55,8 @@ import {
   Upload,
   X,
   Loader2,
+  CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -404,11 +406,28 @@ export default function MenuItemsManagement({
       );
 
       if (response.ok) {
+        const result = await response.json();
+
+        // Remove category from state
         setCategories(categories.filter((cat) => cat.id !== categoryId));
+
+        // Remove all items that belonged to this category from state
         setItems(items.filter((item) => item.categoryId !== categoryId));
-        toast.success("Category deleted successfully");
+
+        // Show success message with count of deleted items
+        const deletedItemsCount = result.deletedItemsCount || 0;
+        if (deletedItemsCount > 0) {
+          toast.success(
+            `Category deleted successfully. ${deletedItemsCount} ${
+              deletedItemsCount === 1 ? "item was" : "items were"
+            } also removed.`
+          );
+        } else {
+          toast.success("Category deleted successfully");
+        }
       } else {
-        toast.error("Failed to delete category");
+        const error = await response.json();
+        toast.error(error.message || "Failed to delete category");
       }
     } catch (error) {
       console.error("Error deleting category:", error);
@@ -423,7 +442,17 @@ export default function MenuItemsManagement({
       });
     }
   };
-
+  const openDeleteCategoryDialog = (category: Category) => {
+    const itemsInCategory = items.filter(
+      (item) => item.categoryId === category.id
+    );
+    setDeleteCategoryDialog({
+      open: true,
+      categoryId: category.id,
+      categoryName: category.name,
+      itemCount: itemsInCategory.length,
+    });
+  };
   const handleEditItem = (item: MenuItem) => {
     setEditingItem(item);
     setItemForm({
@@ -755,7 +784,7 @@ export default function MenuItemsManagement({
           ) : Object.keys(groupedItems).length === 0 ? (
             <Card>
               <CardContent className="p-4 sm:p-6">
-                <div className="text-center py-6 sm:py-8">
+                <div className="text-center">
                   <p className="text-muted-foreground mb-4 text-sm sm:text-base">
                     No items yet. Start by adding your first menu item.
                   </p>
@@ -1537,30 +1566,55 @@ export default function MenuItemsManagement({
       >
         <AlertDialogContent className="w-[95vw] max-w-md mx-auto">
           <AlertDialogHeader className="pb-4">
-            <AlertDialogTitle className="text-lg sm:text-xl">
+            <AlertDialogTitle className="text-lg sm:text-xl flex items-center gap-2">
+              <Trash className="h-5 w-5 text-primary" />
               Delete Category
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm sm:text-base leading-relaxed">
-              Are you sure you want to delete{" "}
-              <span className="font-medium break-words">
-                "{deleteCategoryDialog.categoryName}"
-              </span>
-              ?
-              {deleteCategoryDialog.itemCount > 0 && (
-                <span className="block mt-3 p-2 bg-primary/10 border border-primary/20 rounded-md">
-                  <span className="font-medium text-red-700 text-sm">
-                    Warning: This will also delete{" "}
-                    {deleteCategoryDialog.itemCount} item(s) in this category.
-                  </span>
+            <AlertDialogDescription className="text-sm sm:text-base leading-relaxed space-y-3">
+              <p>
+                Are you sure you want to delete{" "}
+                <span className="font-medium break-words">
+                  "{deleteCategoryDialog.categoryName}"
                 </span>
+                ?
+              </p>
+
+              {deleteCategoryDialog.itemCount > 0 ? (
+                <div className="p-3 bg-primary/20 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-800 mb-1">
+                    <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium text-sm">Warning</span>
+                  </div>
+                  <p className="text-red-700 text-sm">
+                    This will also permanently delete{" "}
+                    <span className="font-semibold">
+                      {deleteCategoryDialog.itemCount}{" "}
+                      {deleteCategoryDialog.itemCount === 1 ? "item" : "items"}
+                    </span>{" "}
+                    in this category.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm">
+                      This category is empty and can be safely deleted.
+                    </span>
+                  </div>
+                </div>
               )}
-              <span className="block mt-2 text-sm">
+
+              <p className="text-xs text-muted-foreground">
                 This action cannot be undone.
-              </span>
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-            <AlertDialogCancel className="w-full sm:w-auto order-2 sm:order-1">
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel
+              className="w-full sm:w-auto order-2 sm:order-1"
+              disabled={deletingCategoryId !== null}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -1568,9 +1622,23 @@ export default function MenuItemsManagement({
                 deleteCategoryDialog.categoryId &&
                 handleDeleteCategory(deleteCategoryDialog.categoryId)
               }
-              className="w-full sm:w-auto order-1 sm:order-2 bg-primary hover:bg-primary/70"
+              disabled={deletingCategoryId !== null}
+              className="w-full sm:w-auto order-1 sm:order-2 bg-primary hover:bg-primary/70 focus:ring-red-600"
             >
-              Delete
+              {deletingCategoryId === deleteCategoryDialog.categoryId ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  Delete Category
+                  {deleteCategoryDialog.itemCount > 0 &&
+                    ` & ${deleteCategoryDialog.itemCount} Item${
+                      deleteCategoryDialog.itemCount === 1 ? "" : "s"
+                    }`}
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

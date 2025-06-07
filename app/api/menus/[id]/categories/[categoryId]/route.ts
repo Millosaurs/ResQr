@@ -1,7 +1,7 @@
 // app/api/menus/[id]/categories/[categoryId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { menuCategories, menus, restaurants } from "@/db/schema";
+import { menuCategories, menus, restaurants, menuItems } from "@/db/schema"; // Add menuItems import
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -69,7 +69,15 @@ export async function DELETE(
       );
     }
 
-    // Delete the category
+    // First, delete all menu items that belong to this category
+    const deletedItems = await db
+      .delete(menuItems)
+      .where(
+        and(eq(menuItems.categoryId, categoryId), eq(menuItems.menuId, menuId))
+      )
+      .returning();
+
+    // Then delete the category
     await db
       .delete(menuCategories)
       .where(
@@ -80,7 +88,11 @@ export async function DELETE(
       );
 
     return NextResponse.json(
-      { message: "Category deleted successfully" },
+      {
+        message: "Category deleted successfully",
+        deletedItemsCount: deletedItems.length,
+        deletedItems: deletedItems.map((item) => item.id), // Return deleted item IDs
+      },
       { status: 200 }
     );
   } catch (error) {
@@ -91,6 +103,8 @@ export async function DELETE(
     );
   }
 }
+
+// ... rest of your PUT and GET functions remain the same
 
 export async function PUT(
   request: NextRequest,
