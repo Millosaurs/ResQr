@@ -617,8 +617,9 @@ export default function MenuItemsManagement({
 
   if (loading || !menuId) {
     return (
-      <div className="flex justify-center items-center h-64 ">
-        <Loader2 className="h-12 w-12 animate-spin text-primary " />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading menu data...</p>
       </div>
     );
   }

@@ -15,13 +15,14 @@ export async function GET(request: NextRequest, context: RouteParams) {
 
     console.log("Fetching public menu with ID:", id);
 
-    // Get published menu with restaurant details
+    // Get menu with restaurant details
     const menu = await db
       .select({
         id: menus.id,
         name: menus.name,
         description: menus.description,
         slug: menus.slug,
+        isPublished: menus.isPublished,
         createdAt: menus.createdAt,
         updatedAt: menus.updatedAt,
         restaurantId: menus.restaurantId,
@@ -41,7 +42,6 @@ export async function GET(request: NextRequest, context: RouteParams) {
       .where(
         and(
           eq(menus.id, id),
-          eq(menus.isPublished, true),
           eq(menus.isActive, true),
           eq(restaurants.isActive, true)
         )
@@ -49,9 +49,21 @@ export async function GET(request: NextRequest, context: RouteParams) {
       .limit(1);
 
     if (menu.length === 0) {
+      return NextResponse.json({ error: "Menu not found" }, { status: 404 });
+    }
+
+    const menuData = menu[0];
+
+    // Check if menu is published (for preview vs public access)
+    const isPreview = request.nextUrl.searchParams.has("preview");
+
+    if (!menuData.isPublished && !isPreview) {
       return NextResponse.json(
-        { error: "Menu not found or not published" },
-        { status: 404 }
+        {
+          error: "Menu not published",
+          message: "This menu is not currently available to the public",
+        },
+        { status: 403 }
       );
     }
 
@@ -81,7 +93,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
         asc(menuItems.name)
       );
 
-    // Group items by category
+    // Group items by category and flatten the structure for frontend
     const itemsByCategory = items.reduce((acc, item) => {
       const categoryId = item.categoryId || "uncategorized";
       if (!acc[categoryId]) {
@@ -112,11 +124,44 @@ export async function GET(request: NextRequest, context: RouteParams) {
       });
     }
 
+    // Flatten items for the frontend with category names
+    const flattenedItems = items.map((item) => ({
+      ...item,
+      categoryName:
+        categories.find((cat) => cat.id === item.categoryId)?.name ||
+        "Other Items",
+      ingredients: item.ingredients ? JSON.parse(item.ingredients) : [],
+      price: item.price.toString(), // Convert decimal to string for frontend
+    }));
+
+    // Extract unique category names
+    const categoryNames = [
+      ...new Set(flattenedItems.map((item) => item.categoryName)),
+    ].sort();
+
     const response = {
       success: true,
       data: {
-        menu: menu[0],
-        categories: categorizedItems,
+        id: menuData.id,
+        name: menuData.name,
+        description: menuData.description,
+        isPublished: menuData.isPublished,
+        restaurant: {
+          id: menuData.restaurantId,
+          name: menuData.restaurantName,
+          address: menuData.restaurantAddress,
+          phone: menuData.restaurantPhone,
+          email: menuData.restaurantEmail,
+          logoUrl: menuData.restaurantLogoUrl,
+          colorTheme: menuData.restaurantColorTheme,
+          cuisineType: menuData.restaurantCuisineType,
+          description: menuData.restaurantDescription,
+          googleRating: menuData.restaurantGoogleRating,
+          googleBusinessUrl: menuData.restaurantGoogleBusinessUrl,
+        },
+        items: flattenedItems,
+        categories: categoryNames,
+        categorizedData: categorizedItems, // Keep this for detailed category info
         totalItems: items.length,
         totalCategories: categories.length,
       },
@@ -126,6 +171,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
       menuId: id,
       itemCount: items.length,
       categoryCount: categories.length,
+      isPublished: menuData.isPublished,
     });
 
     return NextResponse.json(response);
