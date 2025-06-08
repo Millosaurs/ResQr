@@ -23,6 +23,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import {
@@ -40,6 +51,7 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  Trash2,
 } from "lucide-react";
 
 type Restaurant = {
@@ -81,6 +93,9 @@ export default function Page() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch restaurant data on component mount
   useEffect(() => {
@@ -181,6 +196,60 @@ export default function Page() {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      setError(null);
+
+      const response = await fetch("/api/restaurants", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setForm({
+          id: "",
+          name: "",
+          email: null,
+          phone: null,
+          address: null,
+          googleBusinessUrl: null,
+          googleRating: null,
+          cuisineType: null,
+          description: null,
+          logoUrl: null,
+          logoImageId: null,
+          colorTheme: "#dc2626",
+          isActive: true,
+          subscriptionTier: "FREE",
+        });
+        setHasRestaurant(false);
+        setIsDeleteDialogOpen(false);
+        setDeleteConfirmText("");
+        toast.success("Restaurant deleted successfully!");
+      } else {
+        throw new Error(data.error || "Failed to delete restaurant");
+      }
+    } catch (err) {
+      console.error("Error deleting restaurant:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete restaurant";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteDialogClose = () => {
+    setIsDeleteDialogOpen(false);
+    setDeleteConfirmText("");
+  };
+
   const subscriptionTiers = [
     { value: "FREE", label: "Free Plan", color: "bg-gray-100 text-gray-800" },
     { value: "BASIC", label: "Basic Plan", color: "bg-blue-100 text-blue-800" },
@@ -191,6 +260,8 @@ export default function Page() {
       color: "bg-gold-100 text-gold-800",
     },
   ];
+
+  const isDeleteConfirmValid = deleteConfirmText.trim() === form.name?.trim();
 
   const cuisineTypes = [
     "Italian",
@@ -232,7 +303,7 @@ export default function Page() {
     <>
       <SiteHeader title="Restaurant Settings" />
       <div className="flex flex-1 flex-col bg-muted/20">
-        <div className="container mx-auto p-6 max-w-9xl space-y-8">
+        <div className="container mx-auto p-6 max-w-4xl space-y-8">
           {/* Header */}
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
@@ -240,7 +311,9 @@ export default function Page() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                {hasRestaurant ? "" : "Create Your Restaurant"}
+                {hasRestaurant
+                  ? "Restaurant Settings"
+                  : "Create Your Restaurant"}
               </h1>
               <p className="text-muted-foreground">
                 {hasRestaurant
@@ -621,6 +694,91 @@ export default function Page() {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Delete Button - Only show if restaurant exists */}
+              {hasRestaurant && (
+                <Card className="shadow-sm border-destructive/20">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-destructive flex items-center gap-2">
+                      <Trash2 className="h-5 w-5" />
+                      Danger Zone
+                    </CardTitle>
+                    <CardDescription>
+                      Once you delete a restaurant, there is no going back.
+                      Please be certain.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AlertDialog
+                      open={isDeleteDialogOpen}
+                      onOpenChange={setIsDeleteDialogOpen}
+                    >
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          className="w-full flex items-center gap-2"
+                          size="lg"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete Restaurant
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertCircle className="h-5 w-5" />
+                            Delete Restaurant
+                          </AlertDialogTitle>
+                          <AlertDialogDescription asChild>
+                            <div className="space-y-3">
+                              <p>
+                                This action cannot be undone. This will
+                                permanently delete your restaurant{" "}
+                                <strong>"{form.name}"</strong> and remove all
+                                associated data.
+                              </p>
+                              <p className="text-sm">
+                                Please type <strong>{form.name}</strong> to
+                                confirm:
+                              </p>
+                              <Input
+                                value={deleteConfirmText}
+                                onChange={(e) =>
+                                  setDeleteConfirmText(e.target.value)
+                                }
+                                placeholder={`Type "${form.name}" to confirm`}
+                                className="mt-2"
+                              />
+                            </div>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={handleDeleteDialogClose}>
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDelete}
+                            disabled={!isDeleteConfirmValid || isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {isDeleting ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Restaurant
+                              </>
+                            )}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

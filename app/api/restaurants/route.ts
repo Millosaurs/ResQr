@@ -12,25 +12,21 @@ export async function POST(request: NextRequest) {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     // Check if user already has a restaurant
     const existingRestaurant = await db
       .select()
       .from(restaurants)
       .where(eq(restaurants.ownerId, session.user.id))
       .limit(1);
-
     if (existingRestaurant.length > 0) {
       return NextResponse.json(
         { error: "User already has a restaurant" },
         { status: 400 }
       );
     }
-
     const body = await request.json();
     const {
       name,
@@ -45,7 +41,6 @@ export async function POST(request: NextRequest) {
       colorTheme,
       subscriptionTier,
     } = body;
-
     // Validate required fields
     if (!name?.trim()) {
       return NextResponse.json(
@@ -53,9 +48,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     let logoUrl = null;
-
     // If logoImageId is provided, verify the image belongs to the user and get the URL
     if (logoImageId) {
       const imageRecord = await db
@@ -71,7 +64,6 @@ export async function POST(request: NextRequest) {
           )
         )
         .limit(1);
-
       if (imageRecord.length === 0) {
         return NextResponse.json(
           {
@@ -81,10 +73,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-
       logoUrl = imageRecord[0].imageUrl;
     }
-
     // Create restaurant
     const [newRestaurant] = await db
       .insert(restaurants)
@@ -105,13 +95,11 @@ export async function POST(request: NextRequest) {
         isActive: true,
       })
       .returning();
-
     // Update user's hasRestaurant status
     await db
       .update(user)
       .set({ hasRestaurant: true })
       .where(eq(user.id, session.user.id));
-
     return NextResponse.json({
       success: true,
       data: newRestaurant,
@@ -130,25 +118,21 @@ export async function GET(request: NextRequest) {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     // Get user's restaurant
     const userRestaurant = await db
       .select()
       .from(restaurants)
       .where(eq(restaurants.ownerId, session.user.id))
       .limit(1);
-
     if (userRestaurant.length === 0) {
       return NextResponse.json(
         { error: "Restaurant not found" },
         { status: 404 }
       );
     }
-
     return NextResponse.json({
       success: true,
       data: userRestaurant[0],
@@ -167,11 +151,9 @@ export async function PUT(request: NextRequest) {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     const body = await request.json();
     const {
       name,
@@ -186,7 +168,6 @@ export async function PUT(request: NextRequest) {
       colorTheme,
       subscriptionTier,
     } = body;
-
     // Validate required fields
     if (!name?.trim()) {
       return NextResponse.json(
@@ -194,9 +175,7 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
     let logoUrl = null;
-
     // If logoImageId is provided, verify the image belongs to the user and get the URL
     if (logoImageId) {
       const imageRecord = await db
@@ -212,7 +191,6 @@ export async function PUT(request: NextRequest) {
           )
         )
         .limit(1);
-
       if (imageRecord.length === 0) {
         return NextResponse.json(
           {
@@ -222,10 +200,8 @@ export async function PUT(request: NextRequest) {
           { status: 400 }
         );
       }
-
       logoUrl = imageRecord[0].imageUrl;
     }
-
     // Update restaurant
     const [updatedRestaurant] = await db
       .update(restaurants)
@@ -246,14 +222,12 @@ export async function PUT(request: NextRequest) {
       })
       .where(eq(restaurants.ownerId, session.user.id))
       .returning();
-
     if (!updatedRestaurant) {
       return NextResponse.json(
         { error: "Restaurant not found" },
         { status: 404 }
       );
     }
-
     return NextResponse.json({
       success: true,
       data: updatedRestaurant,
@@ -262,6 +236,55 @@ export async function PUT(request: NextRequest) {
     console.error("Error updating restaurant:", error);
     return NextResponse.json(
       { error: "Failed to update restaurant" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check if user has a restaurant to delete
+    const existingRestaurant = await db
+      .select()
+      .from(restaurants)
+      .where(eq(restaurants.ownerId, session.user.id))
+      .limit(1);
+
+    if (existingRestaurant.length === 0) {
+      return NextResponse.json(
+        { error: "Restaurant not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete the restaurant
+    const [deletedRestaurant] = await db
+      .delete(restaurants)
+      .where(eq(restaurants.ownerId, session.user.id))
+      .returning();
+
+    // Update user's hasRestaurant status to false
+    await db
+      .update(user)
+      .set({ hasRestaurant: false })
+      .where(eq(user.id, session.user.id));
+
+    return NextResponse.json({
+      success: true,
+      message: "Restaurant deleted successfully",
+      data: deletedRestaurant,
+    });
+  } catch (error) {
+    console.error("Error deleting restaurant:", error);
+    return NextResponse.json(
+      { error: "Failed to delete restaurant" },
       { status: 500 }
     );
   }

@@ -50,6 +50,8 @@ import {
   SortAsc,
   SortDesc,
   MoreVertical,
+  Store,
+  AlertCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -83,6 +85,7 @@ export default function MenuManagement() {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [filteredMenus, setFilteredMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [deleteMenuId, setDeleteMenuId] = useState<string | null>(null);
@@ -145,15 +148,31 @@ export default function MenuManagement() {
   const fetchMenus = async () => {
     try {
       const response = await fetch("/api/menus");
-      if (response.ok) {
+
+      if (response.status === 404) {
+        // No restaurant found
+        setHasRestaurant(false);
+        setMenus([]);
+      } else if (response.ok) {
         const data = await response.json();
+        setHasRestaurant(true);
         // Fix: Access data.data instead of data directly
         setMenus(Array.isArray(data.data) ? data.data : []);
       } else {
         const errorData = await response.json();
         console.error("API Error:", errorData);
-        toast.error(errorData.error || "Failed to load menus");
-        setMenus([]);
+
+        // Check if error is related to no restaurant
+        if (
+          errorData.error &&
+          errorData.error.toLowerCase().includes("restaurant")
+        ) {
+          setHasRestaurant(false);
+          setMenus([]);
+        } else {
+          toast.error(errorData.error || "Failed to load menus");
+          setMenus([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching menus:", error);
@@ -309,6 +328,36 @@ export default function MenuManagement() {
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading menu data...</p>
+        </div>
+      </>
+    );
+  }
+
+  // Show no restaurant state
+  if (hasRestaurant === false) {
+    return (
+      <>
+        <SiteHeader title="Menus" />
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full">
+            <Store className="h-8 w-8 text-primary" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-semibold">No Restaurant Found</h3>
+            <p className="text-muted-foreground max-w-md">
+              You need to create a restaurant profile before you can manage
+              menus. Set up your restaurant information to get started.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => router.push("/dashboard/settings")}
+              className="w-full sm:w-auto"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Go to Restaurant Settings
+            </Button>
+          </div>
         </div>
       </>
     );
@@ -595,8 +644,8 @@ export default function MenuManagement() {
           </div>
         )}
 
-        {/* Empty state */}
-        {menus.length === 0 && !loading && (
+        {/* Empty state - Only show if user has restaurant but no menus */}
+        {menus.length === 0 && !loading && hasRestaurant === true && (
           <div className="text-center py-12 px-4">
             <h3 className="text-lg font-medium">No menus created yet</h3>
             <p className="text-muted-foreground mb-4">
