@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       // Generate the public menu URL - adjust domain as needed
       menuUrl: `${
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-      }/menu/${restaurant.id}/${menu.slug}`,
+      }/menu/${menu.id}`,
     }));
 
     return NextResponse.json({

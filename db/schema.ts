@@ -252,3 +252,37 @@ export const menuItems = pgTable(
     }).onDelete("set null"),
   ]
 );
+
+// Add this to your schema file
+
+export const qrCodes = pgTable(
+  "qr_codes",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    restaurantId: uuid("restaurant_id").notNull(),
+    menuId: uuid("menu_id").notNull(),
+    imageBuffer: text("image_buffer").notNull(), // Base64 encoded image
+    fileName: varchar("file_name", { length: 255 }).notNull(),
+    size: integer().default(1024),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.restaurantId],
+      foreignColumns: [restaurants.id],
+      name: "qr_codes_restaurant_id_restaurants_id_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.menuId],
+      foreignColumns: [menus.id],
+      name: "qr_codes_menu_id_menus_id_fk",
+    }).onDelete("cascade"),
+  ]
+);

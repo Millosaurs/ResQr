@@ -156,15 +156,15 @@ export default function QRCodesPage() {
               </p>
             </div>
             {restaurant && (
-              <Card className="w-full lg:w-auto lg:min-w-[280px]">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">
+              <Card className="w-full lg:w-auto lg:min-w-[280px] gap-0">
+                <CardHeader className="">
+                  <CardTitle className="text-2xl font-bold">
                     Restaurant
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm">
-                    <p className="font-semibold">{restaurant.name}</p>
+                  <div className="">
+                    <p className="text-xl font-semibold">{restaurant.name}</p>
                     {restaurant.address && (
                       <p className="text-muted-foreground break-words">
                         {restaurant.address}

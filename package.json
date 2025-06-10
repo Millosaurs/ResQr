@@ -46,6 +46,7 @@
     "nodemailer": "^7.0.3",
     "pg": "^8.16.0",
     "postcss": "^8.5.4",
+    "puppeteer": "^24.10.0",
     "qrcode": "^1.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
