@@ -1,55 +1,130 @@
-# 📊 Project Showcase: Restaurant QR Menu SaaS
+# Restaurant QR Menu SaaS
 
 ## Overview
 
 This SaaS application empowers restaurant owners to create digital menus accessible via QR codes. It offers a seamless experience for customers to view menus and provide feedback, while enabling restaurant owners to manage their offerings efficiently.
 
-## Data-Driven Features
+## 🛠️ Technologies Used
 
-### 1. **QR Code Analytics**
+- **Frontend**: Next.js 14+ with App Router
+- **Styling**: Tailwind CSS
+- **Database**: Neon PostgreSQL
+- **ORM**: Drizzle
+- **Authentication**: BetterAuth
+- **Icons**: Lucide React
+- **State Management**: React Context API
+- **Form Handling**: React Hook Form
+- **Image Processing**: ImageKit
+- **Email Service**: Resend
 
-- **Scan Tracking**: Each QR code scan is logged with timestamp, IP address, and user agent.
-- **Insights**: Analyze peak dining times, customer device preferences, and geographic distribution.
+## 🔧 Project Setup
 
-### 2. **Menu Interaction Metrics**
+```bash
+# Clone repository
+git clone https://github.com/yourusername/resqr.git
+cd resqr
+```
 
-- **Item Popularity**: Monitor which menu items are viewed most frequently.
-- **Category Engagement**: Assess which categories attract the most attention.
+# Install dependencies
 
-### 3. **Customer Feedback Integration**
+```
+bun install
+```
 
-- **Google Ratings**: Redirect customers to the restaurant's Google Business page for reviews.
-- **Feedback Analysis**: Aggregate and analyze customer ratings over time.
+# Setup environment variables
 
-## Data Architecture
+```
+cp .env.example .env
+```
 
-### **Database Schema Highlights**
+# Update .env with these values:
 
-- **Restaurants**: Stores restaurant details, including contact information and branding.
-- **Menus**: Contains menu metadata and links to QR codes.
-- **Menu Categories & Items**: Organizes menu items into categories with detailed descriptions and pricing.
-- **QR Scans**: Logs each QR code scan event for analytics.([getsuper.ai][1])
+```
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+DATABASE_URL="postgresql://[user]:[password]@[neon-host]/[db-name]?sslmode=require"
+RESEND_API="your_resend_api_key"
+IMAGEKIT_PRIVATE_KEY="your_imagekit_private_key"
+NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY="your_imagekit_public_key"
+BETTER_AUTH_SECRET="your_betterauth_secret"
+```
 
-### **Data Relationships**
+# Run database migrations
 
-- **One-to-Many**: A restaurant can have multiple menus; each menu can have multiple categories; each category can have multiple items.
-- **Foreign Keys**: Ensure data integrity across related tables.
+```
+bun run migrate
+```
 
-## Technologies Used
+# Start development server
 
-- **Database**: Neon (PostgreSQL) for scalable and reliable data storage.
-- **ORM**: Drizzle for type-safe and efficient database interactions.
-- **Authentication**: BetterAuth for secure user authentication and authorization.
-- **Frontend**: Next.js 14+ with App Router for dynamic and responsive UI.
-- **Styling**: Tailwind CSS for utility-first and customizable design.
-- **QR Code Generation**: qrcode.js library for creating scannable codes.
-- **Icons**: Lucide React for consistent and scalable iconography.([careerfoundry.com][2], [datascienceweekly.org][3])
+```
+bun run dev
+```
 
-## Visualizations & Dashboards
+## 🏗️ Project Structure
 
-- **Admin Dashboard**: Provides restaurant owners with insights into menu performance and customer engagement.
-- **Analytics Charts**: Visual representations of scan frequency, item popularity, and customer feedback trends.
+```
+├── app/              # Next.js 
+application routes
+│   ├── actions/      # Server actions 
+(email sending)
+│   ├── api/          # API endpoints
+│   ├── dashboard/    # Restaurant owner 
+dashboard
+│   │   ├── account/    # Account 
+management
+│   │   ├── analytics/  # Usage analytics
+│   │   ├── menus/      # Menu management
+│   │   ├── qr-codes/   # QR code 
+management
+│   │   └── settings/   # Restaurant 
+settings
+│   ├── menu/         # Customer-facing 
+menu
+│   ├── onboarding/   # Restaurant 
+onboarding
+│   ├── preview/      # Menu preview
+│   ├── sign-in/      # Authentication
+│   └── sign-up/      # User registration
+├── components/       # Reusable UI 
+components
+│   └── ui/           # Shadcn UI 
+components
+├── db/               # Database schema & 
+migrations
+├── hooks/            # Custom React hooks
+├── lib/              # Auth and utility 
+functions
+├── public/           # Static assets
+└── types/            # TypeScript type 
+definitions
+```
 
-## Conclusion
+## 🔄 User Flow
 
-This project exemplifies the integration of data analytics into a SaaS platform, offering valuable insights to restaurant owners and enhancing the dining experience for customers.
+```
+flowchart TD
+A[User Registration] --> B[Onboarding Process]
+B --> C[Restaurant Dashboard]
+C --> D[Create Menu]
+D --> E[Generate QR Code]
+C --> F[Analytics Dashboard]
+F --> G[Track Scans & Feedback]
+```
+
+### Restaurant Owner Journey
+
+```
+1. Sign Up/Login - Authentication via BetterAuth
+2. Onboarding - Guided setup for restaurant details
+3. Menu Creation - Build digital menus with categories and items
+4. QR Generation - Create scannable QR codes for tables
+5. Analytics - Monitor customer engagement metrics
+```
+
+### Customer Experience
+
+```
+1. Scan QR Code - Access menu via mobile device
+2. Browse Menu - View menu items organized by categories
+3. Provide Feedback - Rate restaurant and menu items
+```

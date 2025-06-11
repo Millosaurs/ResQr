@@ -53,6 +53,7 @@ import {
   Loader2,
   Trash2,
 } from "lucide-react";
+import { Toaster } from "@/components/ui/sonner";
 
 type Restaurant = {
   id: string;
@@ -279,22 +280,25 @@ export default function Page() {
   ];
 
   // Loading component with Loader2
-  const LoadingScreen = () => (
-    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-muted-foreground">Loading restaurant data...</p>
-    </div>
-  );
 
   if (isInitialLoading) {
     return (
       <>
-        <SiteHeader title="Restaurant Settings" />
-        <div className="flex flex-1 flex-col bg-muted/20">
-          <div className="container mx-auto p-6 max-w-4xl">
-            <LoadingScreen />
-          </div>
+        <SiteHeader title="QR Codes" />
+        <div className="flex flex-1 flex-col items-center justify-center p-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground mt-2 text-center">
+            Loading Settings...
+          </p>
         </div>
+
+        <Toaster
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-outfit)",
+            },
+          }}
+        />
       </>
     );
   }
@@ -303,7 +307,7 @@ export default function Page() {
     <>
       <SiteHeader title="Restaurant Settings" />
       <div className="flex flex-1 flex-col bg-muted/20">
-        <div className="container mx-auto p-6 max-w-4xl space-y-8">
+        <div className="container mx-auto p-6 max-w-9xl space-y-8">
           {/* Header */}
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
@@ -311,9 +315,7 @@ export default function Page() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                {hasRestaurant
-                  ? "Restaurant Settings"
-                  : "Create Your Restaurant"}
+                {hasRestaurant ? "" : "Create Your Restaurant"}
               </h1>
               <p className="text-muted-foreground">
                 {hasRestaurant

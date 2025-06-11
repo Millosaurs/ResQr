@@ -60,6 +60,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
 
 interface MenuItem {
   id: string;
@@ -617,10 +618,22 @@ export default function MenuItemsManagement({
 
   if (loading || !menuId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Loading menu data...</p>
-      </div>
+      <>
+        <div className="flex flex-1 flex-col items-center justify-center p-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground mt-2 text-center">
+            Loading Menu...
+          </p>
+        </div>
+
+        <Toaster
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-outfit)",
+            },
+          }}
+        />
+      </>
     );
   }
 

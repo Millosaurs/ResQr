@@ -59,9 +59,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { useRouter } from "next/navigation";
+import { SidebarInset } from "@/components/ui/sidebar";
 
 interface Menu {
   id: string;
@@ -324,11 +325,21 @@ export default function MenuManagement() {
   if (loading) {
     return (
       <>
-        <SiteHeader title="Menus" />
-        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading menu data...</p>
+        <SiteHeader title="QR Codes" />
+        <div className="flex flex-1 flex-col items-center justify-center p-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground mt-2 text-center">
+            Loading Menus...
+          </p>
         </div>
+
+        <Toaster
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-outfit)",
+            },
+          }}
+        />
       </>
     );
   }

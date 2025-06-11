@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Head from "next/head";
+import { Toaster } from "sonner";
 
 interface MenuItem {
   id: string;
@@ -261,9 +262,22 @@ export default function PublicMenuPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <Loader2 className="h-8 w-8 md:h-12 md:w-12 animate-spin text-primary" />
-      </div>
+      <>
+        <div className="flex flex-1 flex-col items-center justify-center p-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground mt-2 text-center">
+            Loading QR codes...
+          </p>
+        </div>
+
+        <Toaster
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-outfit)",
+            },
+          }}
+        />
+      </>
     );
   }
 

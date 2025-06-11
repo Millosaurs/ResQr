@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Share2, QrCode, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner"; // Adjust based on your toast implementation
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 interface QRCodeData {
   id: string;
@@ -130,145 +131,166 @@ export default function QRCodesPage() {
 
   if (loading) {
     return (
-      <SidebarInset>
-        <SiteHeader title="QR Codes" />
-        <div className="flex flex-1 flex-col items-center justify-center p-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground mt-2 text-center">
-            Loading QR codes...
-          </p>
-        </div>
-      </SidebarInset>
+      <>
+        <SidebarInset>
+          <SiteHeader title="QR Codes" />
+          <div className="flex flex-1 flex-col items-center justify-center p-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p className="text-muted-foreground mt-2 text-center">
+              Loading QR codes...
+            </p>
+          </div>
+        </SidebarInset>
+        <Toaster
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-outfit)",
+            },
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <SidebarInset>
-      <SiteHeader title="QR Codes" />
-      <div className="flex flex-1 flex-col">
-        <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6">
-          {/* Header section - responsive layout */}
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex-1">
-              <h2 className="text-xl sm:text-2xl font-bold">QR Codes</h2>
-              <p className="text-muted-foreground text-sm sm:text-base">
-                Generate and download QR codes for your restaurant menus
-              </p>
-            </div>
-            {restaurant && (
-              <Card className="w-full lg:w-auto lg:min-w-[280px] gap-0">
-                <CardHeader className="">
-                  <CardTitle className="text-2xl font-bold">
-                    Restaurant
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="">
-                    <p className="text-xl font-semibold">{restaurant.name}</p>
-                    {restaurant.address && (
-                      <p className="text-muted-foreground break-words">
-                        {restaurant.address}
-                      </p>
-                    )}
-                    {restaurant.phone && (
-                      <p className="text-muted-foreground">
-                        {restaurant.phone}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Empty state or QR codes grid */}
-          {qrCodes.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 px-4">
-                <QrCode className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-4" />
-                <h3 className="text-base sm:text-lg font-semibold mb-2 text-center">
-                  No QR Codes Available
-                </h3>
-                <p className="text-muted-foreground text-center text-sm sm:text-base max-w-md">
-                  You need to create and publish menus first to generate QR
-                  codes.
+    <>
+      <SidebarInset>
+        <SiteHeader title="QR Codes" />
+        <div className="flex flex-1 flex-col">
+          <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6">
+            {/* Header section - responsive layout */}
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex-1">
+                <h2 className="text-xl sm:text-2xl font-bold">QR Codes</h2>
+                <p className="text-muted-foreground text-sm sm:text-base">
+                  Generate and download QR codes for your restaurant menus
                 </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {qrCodes.map((qrCode) => (
-                <Card key={qrCode.id} className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle
-                      className="text-base sm:text-lg truncate"
-                      title={qrCode.menuName}
-                    >
-                      {qrCode.menuName}
+              </div>
+              {restaurant && (
+                <Card className="w-full lg:w-auto lg:min-w-[280px] gap-0">
+                  <CardHeader className="">
+                    <CardTitle className="text-2xl font-bold">
+                      Restaurant
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* QR Code Image - responsive sizing */}
-                    <div className="flex flex-col items-center">
-                      <div className="w-full max-w-[200px] aspect-square">
-                        <img
-                          src={getQRCodeImageUrl(qrCode)}
-                          alt={`QR Code for ${qrCode.menuName}`}
-                          className="w-full h-full object-contain border border-border rounded-lg"
-                          onError={(e) => {
-                            // Fallback to external service if user's QR code fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                              qrCode.menuUrl
-                            )}`;
-                          }}
-                        />
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-2 text-center">
-                        Scan to view {qrCode.menuName}
-                      </p>
-                    </div>
-
-                    {/* Action buttons - responsive layout */}
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button
-                        size="default"
-                        variant="outline"
-                        className="flex-1 text-xs sm:text-sm"
-                        onClick={() => downloadQRCode(qrCode)}
-                        disabled={downloadingId === qrCode.id}
-                      >
-                        {downloadingId === qrCode.id ? (
-                          <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin mr-2" />
-                        ) : (
-                          <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                        )}
-                        Download
-                      </Button>
-                      <Button
-                        size="default"
-                        variant="outline"
-                        className="flex-1 text-xs sm:text-sm"
-                        onClick={() => shareQRCode(qrCode)}
-                      >
-                        <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                        Share
-                      </Button>
-                    </div>
-
-                    {/* URL display - responsive text */}
-                    <div className="text-xs text-muted-foreground">
-                      <p className="truncate break-all" title={qrCode.menuUrl}>
-                        {qrCode.menuUrl}
-                      </p>
+                  <CardContent>
+                    <div className="">
+                      <p className="text-xl font-semibold">{restaurant.name}</p>
+                      {restaurant.address && (
+                        <p className="text-muted-foreground break-words">
+                          {restaurant.address}
+                        </p>
+                      )}
+                      {restaurant.phone && (
+                        <p className="text-muted-foreground">
+                          {restaurant.phone}
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
-          )}
+
+            {/* Empty state or QR codes grid */}
+            {qrCodes.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 px-4">
+                  <QrCode className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 text-center">
+                    No QR Codes Available
+                  </h3>
+                  <p className="text-muted-foreground text-center text-sm sm:text-base max-w-md">
+                    You need to create and publish menus first to generate QR
+                    codes.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {qrCodes.map((qrCode) => (
+                  <Card key={qrCode.id} className="overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <CardTitle
+                        className="text-base sm:text-lg truncate"
+                        title={qrCode.menuName}
+                      >
+                        {qrCode.menuName}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* QR Code Image - responsive sizing */}
+                      <div className="flex flex-col items-center">
+                        <div className="w-full max-w-[200px] aspect-square">
+                          <img
+                            src={getQRCodeImageUrl(qrCode)}
+                            alt={`QR Code for ${qrCode.menuName}`}
+                            className="w-full h-full object-contain border border-border rounded-lg"
+                            onError={(e) => {
+                              // Fallback to external service if user's QR code fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                                qrCode.menuUrl
+                              )}`;
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-2 text-center">
+                          Scan to view {qrCode.menuName}
+                        </p>
+                      </div>
+
+                      {/* Action buttons - responsive layout */}
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          size="default"
+                          variant="outline"
+                          className="flex-1 text-xs sm:text-sm"
+                          onClick={() => downloadQRCode(qrCode)}
+                          disabled={downloadingId === qrCode.id}
+                        >
+                          {downloadingId === qrCode.id ? (
+                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin mr-2" />
+                          ) : (
+                            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                          )}
+                          Download
+                        </Button>
+                        <Button
+                          size="default"
+                          variant="outline"
+                          className="flex-1 text-xs sm:text-sm"
+                          onClick={() => shareQRCode(qrCode)}
+                        >
+                          <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                          Share
+                        </Button>
+                      </div>
+
+                      {/* URL display - responsive text */}
+                      <div className="text-xs text-muted-foreground">
+                        <p
+                          className="truncate break-all"
+                          title={qrCode.menuUrl}
+                        >
+                          {qrCode.menuUrl}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </SidebarInset>
+      </SidebarInset>
+      <Toaster
+        toastOptions={{
+          style: {
+            fontFamily: "var(--font-outfit)",
+          },
+        }}
+      />
+    </>
   );
 }
