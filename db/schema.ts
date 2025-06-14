@@ -10,8 +10,25 @@ import {
   uuid,
   integer,
   decimal,
+  pgEnum,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+
+export const subscriptionTypeEnum = pgEnum("subscription_type", [
+  "MONTHLY",
+  "YEARLY",
+]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "ACTIVE",
+  "CANCELLED",
+  "EXPIRED",
+  "PENDING",
+]);
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "PENDING",
+  "COMPLETED",
+  "FAILED",
+  "REFUNDED",
+]);
 
 export const user = pgTable(
   "user",
@@ -24,8 +41,45 @@ export const user = pgTable(
     createdAt: timestamp({ mode: "string" }).notNull(),
     updatedAt: timestamp({ mode: "string" }).notNull(),
     hasRestaurant: boolean(),
+
+    subscriptionType: subscriptionTypeEnum("subscription_type"),
+    subscriptionStatus: subscriptionStatusEnum("subscription_status"),
+    subscriptionStartDate: timestamp("subscription_start_date", {
+      mode: "string",
+    }),
+    subscriptionEndDate: timestamp("subscription_end_date", { mode: "string" }),
+    razorpayCustomerId: text("razorpay_customer_id"),
   },
   (table) => [unique("user_email_key").on(table.email)]
+);
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    userId: text("user_id").notNull(),
+    amount: integer().notNull(), // Amount in paise
+    currency: varchar({ length: 3 }).default("INR").notNull(),
+    status: paymentStatusEnum().notNull(),
+    razorpayOrderId: text("razorpay_order_id"),
+    razorpayPaymentId: text("razorpay_payment_id"),
+    planType: subscriptionTypeEnum("plan_type").notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.userId],
+      foreignColumns: [user.id],
+      name: "payments_user_id_user_id_fk",
+    }).onDelete("cascade"),
+  ]
 );
 
 export const session = pgTable(

@@ -32,7 +32,6 @@ import {
   Check,
   ChefHat,
   X,
-  Upload,
   Star,
   MapPin,
   Phone,
@@ -40,7 +39,6 @@ import {
   Globe,
   Palette,
   Info,
-  Sparkles,
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
@@ -72,40 +70,16 @@ const COUNTRY_CODES = [
 ];
 
 const CUISINE_TYPES = [
-  { value: "italian", label: "🍝 Italian", color: "bg-red-100 text-red-800" },
-  {
-    value: "mexican",
-    label: "🌮 Mexican",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-  { value: "chinese", label: "🥢 Chinese", color: "bg-red-100 text-red-800" },
-  {
-    value: "indian",
-    label: "🍛 Indian",
-    color: "bg-orange-100 text-orange-800",
-  },
-  {
-    value: "japanese",
-    label: "🍣 Japanese",
-    color: "bg-pink-100 text-pink-800",
-  },
-  {
-    value: "american",
-    label: "🍔 American",
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    value: "mediterranean",
-    label: "🫒 Mediterranean",
-    color: "bg-green-100 text-green-800",
-  },
-  { value: "thai", label: "🌶️ Thai", color: "bg-purple-100 text-purple-800" },
-  {
-    value: "french",
-    label: "🥐 French",
-    color: "bg-indigo-100 text-indigo-800",
-  },
-  { value: "other", label: "🍽️ Other", color: "bg-gray-100 text-gray-800" },
+  { value: "italian", label: "🍝 Italian" },
+  { value: "mexican", label: "🌮 Mexican" },
+  { value: "chinese", label: "🥢 Chinese" },
+  { value: "indian", label: "🍛 Indian" },
+  { value: "japanese", label: "🍣 Japanese" },
+  { value: "american", label: "🍔 American" },
+  { value: "mediterranean", label: "🫒 Mediterranean" },
+  { value: "thai", label: "🌶️ Thai" },
+  { value: "french", label: "🥐 French" },
+  { value: "other", label: "🍽️ Other" },
 ];
 
 export default function OnboardingPage() {
@@ -114,7 +88,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 6; // Increased to 6 steps
+  const totalSteps = 6;
 
   // Form validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -410,21 +384,19 @@ export default function OnboardingPage() {
     switch (currentStep) {
       case 1:
         return (
-          <>
-            <CardHeader className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Info className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Basic Information</CardTitle>
-              <CardDescription className="text-base">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Basic Information
+              </CardTitle>
+              <CardDescription>
                 Let's start with the essential details of your restaurant
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-semibold">
-                  Restaurant Name *
-                </Label>
+                <Label htmlFor="name">Restaurant Name *</Label>
                 <Input
                   id="name"
                   name="name"
@@ -432,25 +404,17 @@ export default function OnboardingPage() {
                   onChange={handleChange}
                   placeholder="Enter your restaurant name"
                   required
-                  className={`h-12 text-base ${
-                    errors.name
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : "border-muted-foreground/20 focus-visible:ring-primary"
-                  }`}
+                  className={errors.name ? "border-destructive" : ""}
                 />
                 {errors.name && (
-                  <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                    <X className="w-4 h-4" /> {errors.name}
-                  </p>
+                  <p className="text-destructive text-sm">{errors.name}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label
-                  htmlFor="address"
-                  className="text-sm font-semibold flex items-center gap-2"
-                >
-                  <MapPin className="w-4 h-4" /> Address
+                <Label htmlFor="address" className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Address
                 </Label>
                 <Input
                   id="address"
@@ -458,17 +422,14 @@ export default function OnboardingPage() {
                   value={restaurantData.address}
                   onChange={handleChange}
                   placeholder="Enter your restaurant address"
-                  className="h-12 text-base border-muted-foreground/20 focus-visible:ring-primary"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="phone"
-                    className="text-sm font-semibold flex items-center gap-2"
-                  >
-                    <Phone className="w-4 h-4" /> Phone Number
+                  <Label htmlFor="phone" className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    Phone Number
                   </Label>
                   <div className="flex gap-2">
                     <Select
@@ -477,13 +438,13 @@ export default function OnboardingPage() {
                         handleSelectChange("countryCode", value)
                       }
                     >
-                      <SelectTrigger className="w-[120px] h-12 border-muted-foreground/20">
+                      <SelectTrigger className="w-[120px]">
                         <SelectValue placeholder="Code" />
                       </SelectTrigger>
                       <SelectContent>
                         {COUNTRY_CODES.map((country) => (
                           <SelectItem key={country.code} value={country.code}>
-                            {country.code} ({country.country.split("/")[0]})
+                            {country.code}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -494,26 +455,18 @@ export default function OnboardingPage() {
                       value={restaurantData.phone}
                       onChange={handleChange}
                       placeholder="Enter phone number"
-                      className={`h-12 text-base ${
-                        errors.phone
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : "border-muted-foreground/20 focus-visible:ring-primary"
-                      }`}
+                      className={errors.phone ? "border-destructive" : ""}
                     />
                   </div>
                   {errors.phone && (
-                    <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                      <X className="w-4 h-4" /> {errors.phone}
-                    </p>
+                    <p className="text-destructive text-sm">{errors.phone}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-sm font-semibold flex items-center gap-2"
-                  >
-                    <Mail className="w-4 h-4" /> Email Address
+                  <Label htmlFor="email" className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email Address
                   </Label>
                   <Input
                     id="email"
@@ -522,50 +475,39 @@ export default function OnboardingPage() {
                     value={restaurantData.email}
                     onChange={handleChange}
                     placeholder="Enter email address"
-                    className={`h-12 text-base ${
-                      errors.email
-                        ? "border-destructive focus-visible:ring-destructive"
-                        : "border-muted-foreground/20 focus-visible:ring-primary"
-                    }`}
+                    className={errors.email ? "border-destructive" : ""}
                   />
                   {errors.email && (
-                    <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                      <X className="w-4 h-4" /> {errors.email}
-                    </p>
+                    <p className="text-destructive text-sm">{errors.email}</p>
                   )}
                 </div>
               </div>
             </CardContent>
-          </>
+          </Card>
         );
 
       case 2:
         return (
-          <>
-            <CardHeader className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ChefHat className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Restaurant Details</CardTitle>
-              <CardDescription className="text-base">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ChefHat className="h-5 w-5" />
+                Restaurant Details
+              </CardTitle>
+              <CardDescription>
                 Tell us about your cuisine and what makes you special
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="cuisineType" className="text-sm font-semibold">
-                  Cuisine Type
-                </Label>
+                <Label htmlFor="cuisineType">Cuisine Type</Label>
                 <Select
                   value={restaurantData.cuisineType}
                   onValueChange={(value) =>
                     handleSelectChange("cuisineType", value)
                   }
                 >
-                  <SelectTrigger
-                    id="cuisineType"
-                    className="h-12 text-base border-muted-foreground/20"
-                  >
+                  <SelectTrigger id="cuisineType">
                     <SelectValue placeholder="Select your cuisine type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -577,67 +519,58 @@ export default function OnboardingPage() {
                   </SelectContent>
                 </Select>
                 {restaurantData.cuisineType && (
-                  <Badge className={`mt-2 ${getSelectedCuisine()?.color}`}>
+                  <Badge variant="secondary" className="mt-2">
                     {getSelectedCuisine()?.label}
                   </Badge>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-semibold">
-                  Description
-                </Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   name="description"
                   value={restaurantData.description}
                   onChange={handleChange}
                   placeholder="Describe your restaurant's atmosphere, specialties, and what makes it unique..."
-                  className="min-h-[120px] text-base border-muted-foreground/20 focus-visible:ring-primary resize-none"
+                  className="min-h-[120px] resize-none"
                 />
                 <p className="text-xs text-muted-foreground">
                   {restaurantData.description.length}/500 characters
                 </p>
               </div>
             </CardContent>
-          </>
+          </Card>
         );
 
       case 3:
         return (
-          <>
-            <CardHeader className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Globe className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Online Presence</CardTitle>
-              <CardDescription className="text-base">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Online Presence
+              </CardTitle>
+              <CardDescription>
                 Connect your Google Business profile to boost credibility
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label
-                  htmlFor="googleBusinessUrl"
-                  className="text-sm font-semibold"
-                >
-                  Google Business URL
-                </Label>
+                <Label htmlFor="googleBusinessUrl">Google Business URL</Label>
                 <Input
                   id="googleBusinessUrl"
                   name="googleBusinessUrl"
                   value={restaurantData.googleBusinessUrl}
                   onChange={handleChange}
                   placeholder="https://business.google.com/..."
-                  className={`h-12 text-base ${
-                    errors.googleBusinessUrl
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : "border-muted-foreground/20 focus-visible:ring-primary"
-                  }`}
+                  className={
+                    errors.googleBusinessUrl ? "border-destructive" : ""
+                  }
                 />
                 {errors.googleBusinessUrl && (
-                  <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                    <X className="w-4 h-4" /> {errors.googleBusinessUrl}
+                  <p className="text-destructive text-sm">
+                    {errors.googleBusinessUrl}
                   </p>
                 )}
               </div>
@@ -645,9 +578,10 @@ export default function OnboardingPage() {
               <div className="space-y-2">
                 <Label
                   htmlFor="googleRating"
-                  className="text-sm font-semibold flex items-center gap-2"
+                  className="flex items-center gap-2"
                 >
-                  <Star className="w-4 h-4" /> Google Rating (0-5)
+                  <Star className="w-4 h-4" />
+                  Google Rating (0-5)
                 </Label>
                 <div className="relative">
                   <Input
@@ -660,11 +594,7 @@ export default function OnboardingPage() {
                     value={restaurantData.googleRating}
                     onChange={handleChange}
                     placeholder="e.g., 4.5"
-                    className={`h-12 text-base ${
-                      errors.googleRating
-                        ? "border-destructive focus-visible:ring-destructive"
-                        : "border-muted-foreground/20 focus-visible:ring-primary"
-                    }`}
+                    className={errors.googleRating ? "border-destructive" : ""}
                   />
                   {restaurantData.googleRating && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -676,34 +606,34 @@ export default function OnboardingPage() {
                   )}
                 </div>
                 {errors.googleRating && (
-                  <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                    <X className="w-4 h-4" /> {errors.googleRating}
+                  <p className="text-destructive text-sm">
+                    {errors.googleRating}
                   </p>
                 )}
               </div>
             </CardContent>
-          </>
+          </Card>
         );
 
       case 4:
         return (
-          <>
-            <CardHeader className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Palette className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Branding</CardTitle>
-              <CardDescription className="text-base">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Branding
+              </CardTitle>
+              <CardDescription>
                 Customize your restaurant's visual identity
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <Label className="text-sm font-semibold">Restaurant Logo</Label>
+                <Label>Restaurant Logo</Label>
                 <div className="flex flex-col items-center space-y-4">
                   {restaurantData.logoUrl ? (
                     <div className="relative">
-                      <div className="w-32 h-32 rounded-lg border-2 border-primary/20 overflow-hidden bg-white shadow-lg">
+                      <div className="w-32 h-32 rounded-lg border overflow-hidden bg-white">
                         <img
                           src={restaurantData.logoUrl}
                           alt="Restaurant Logo"
@@ -714,7 +644,7 @@ export default function OnboardingPage() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        className="absolute -top-2 -right-2 rounded-full w-8 h-8 p-0 shadow-lg"
+                        className="absolute -top-2 -right-2 rounded-full w-8 h-8 p-0"
                         onClick={handleLogoRemove}
                         disabled={imageUploading}
                       >
@@ -738,10 +668,7 @@ export default function OnboardingPage() {
                   )}
 
                   {restaurantData.logoImageId && (
-                    <Badge
-                      variant="secondary"
-                      className="text-green-700 bg-green-100"
-                    >
+                    <Badge variant="secondary" className="text-green-700">
                       <CheckCircle2 className="w-4 h-4 mr-1" />
                       Logo uploaded successfully
                     </Badge>
@@ -752,9 +679,7 @@ export default function OnboardingPage() {
               <Separator />
 
               <div className="space-y-4">
-                <Label htmlFor="colorTheme" className="text-sm font-semibold">
-                  Brand Color Theme
-                </Label>
+                <Label htmlFor="colorTheme">Brand Color Theme</Label>
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <Input
@@ -763,7 +688,7 @@ export default function OnboardingPage() {
                       type="color"
                       value={restaurantData.colorTheme}
                       onChange={handleChange}
-                      className="w-16 h-16 rounded-lg border-2 border-muted-foreground/20 cursor-pointer"
+                      className="w-16 h-16 rounded-lg border cursor-pointer"
                     />
                   </div>
                   <div className="flex-1">
@@ -776,7 +701,7 @@ export default function OnboardingPage() {
                         }))
                       }
                       placeholder="#ff6b35"
-                      className="h-12 text-base font-mono border-muted-foreground/20"
+                      className="font-mono"
                     />
                     <p className="text-sm text-muted-foreground mt-1">
                       This color will be used for your restaurant's branding
@@ -786,34 +711,32 @@ export default function OnboardingPage() {
 
                 {/* Color Preview */}
                 <div
-                  className="h-24 rounded-lg border-2 border-muted-foreground/20 flex items-center justify-center text-white font-semibold text-lg shadow-inner"
+                  className="h-24 rounded-lg border flex items-center justify-center text-white font-semibold text-lg"
                   style={{ backgroundColor: restaurantData.colorTheme }}
                 >
                   {restaurantData.name || "Your Restaurant"}
                 </div>
               </div>
             </CardContent>
-          </>
+          </Card>
         );
 
       case 5:
         return (
-          <>
-            <CardHeader className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Check className="h-5 w-5" />
                 Review Your Information
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription>
                 Please review all details before completing your setup
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-muted/50 rounded-lg p-6 space-y-6">
+              <div className="space-y-6">
                 {/* Restaurant Preview Card */}
-                <div className="bg-card rounded-lg p-4 border shadow-sm">
+                <div className="bg-muted/50 rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     {restaurantData.logoUrl && (
                       <img
@@ -827,9 +750,7 @@ export default function OnboardingPage() {
                         {restaurantData.name}
                       </h3>
                       {restaurantData.cuisineType && (
-                        <Badge
-                          className={`mt-1 ${getSelectedCuisine()?.color}`}
-                        >
+                        <Badge variant="secondary" className="mt-1">
                           {getSelectedCuisine()?.label}
                         </Badge>
                       )}
@@ -848,10 +769,9 @@ export default function OnboardingPage() {
                 {/* Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-foreground border-b pb-2">
+                    <h4 className="font-semibold border-b pb-2">
                       Contact Information
                     </h4>
-
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -859,7 +779,6 @@ export default function OnboardingPage() {
                           {restaurantData.address || "Not provided"}
                         </span>
                       </div>
-
                       <div className="flex items-center gap-2">
                         <Phone className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm">
@@ -868,14 +787,12 @@ export default function OnboardingPage() {
                             : "Not provided"}
                         </span>
                       </div>
-
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm">
                           {restaurantData.email || "Not provided"}
                         </span>
                       </div>
-
                       {restaurantData.googleBusinessUrl && (
                         <div className="flex items-center gap-2">
                           <Globe className="w-4 h-4 text-muted-foreground" />
@@ -888,10 +805,9 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-foreground border-b pb-2">
+                    <h4 className="font-semibold border-b pb-2">
                       Restaurant Details
                     </h4>
-
                     <div className="space-y-3">
                       <div>
                         <Label className="text-xs font-medium text-muted-foreground">
@@ -903,14 +819,13 @@ export default function OnboardingPage() {
                             : "Not specified"}
                         </p>
                       </div>
-
                       <div>
                         <Label className="text-xs font-medium text-muted-foreground">
                           Brand Color
                         </Label>
                         <div className="flex items-center gap-2 mt-1">
                           <div
-                            className="w-6 h-6 rounded border shadow-sm"
+                            className="w-6 h-6 rounded border"
                             style={{
                               backgroundColor: restaurantData.colorTheme,
                             }}
@@ -920,7 +835,6 @@ export default function OnboardingPage() {
                           </span>
                         </div>
                       </div>
-
                       <div>
                         <Label className="text-xs font-medium text-muted-foreground">
                           Logo
@@ -938,7 +852,7 @@ export default function OnboardingPage() {
                 {restaurantData.description && (
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold">Description</Label>
-                    <div className="bg-card rounded-lg p-4 border">
+                    <div className="bg-muted/50 rounded-lg p-4">
                       <p className="text-sm leading-relaxed">
                         {restaurantData.description}
                       </p>
@@ -947,25 +861,23 @@ export default function OnboardingPage() {
                 )}
               </div>
             </CardContent>
-          </>
+          </Card>
         );
 
       case 6:
         return (
-          <>
-            <CardHeader className="text-center space-y-2">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-10 h-10 text-green-600" />
-              </div>
-              <CardTitle className="text-3xl text-green-700">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
                 Almost Ready!
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription>
                 Confirm your details and create your restaurant profile
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
+              <div className="bg-green-50 rounded-lg p-6 border border-green-200">
                 <div className="text-center space-y-4">
                   <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto" />
                   <div>
@@ -1041,7 +953,7 @@ export default function OnboardingPage() {
                 </div>
               </div>
             </CardContent>
-          </>
+          </Card>
         );
 
       default:
@@ -1050,66 +962,13 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Cartoonish Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50">
-        {/* Floating Elements */}
-        <div
-          className="absolute top-10 left-10 w-20 h-20 bg-yellow-200/40 rounded-full animate-bounce"
-          style={{ animationDelay: "0s", animationDuration: "3s" }}
-        ></div>
-        <div
-          className="absolute top-32 right-20 w-16 h-16 bg-orange-200/40 rounded-full animate-bounce"
-          style={{ animationDelay: "1s", animationDuration: "4s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-20 w-24 h-24 bg-red-200/40 rounded-full animate-bounce"
-          style={{ animationDelay: "2s", animationDuration: "5s" }}
-        ></div>
-        <div
-          className="absolute bottom-32 right-10 w-12 h-12 bg-pink-200/40 rounded-full animate-bounce"
-          style={{ animationDelay: "0.5s", animationDuration: "3.5s" }}
-        ></div>
-
-        {/* Food Icons Background */}
-        <div className="absolute inset-0 opacity-5">
-          <div
-            className="absolute top-1/4 left-1/4 text-6xl animate-pulse"
-            style={{ animationDelay: "1s" }}
-          >
-            🍕
-          </div>
-          <div
-            className="absolute top-1/3 right-1/4 text-5xl animate-pulse"
-            style={{ animationDelay: "2s" }}
-          >
-            🍔
-          </div>
-          <div
-            className="absolute bottom-1/4 left-1/3 text-4xl animate-pulse"
-            style={{ animationDelay: "3s" }}
-          >
-            🍝
-          </div>
-          <div
-            className="absolute bottom-1/3 right-1/3 text-6xl animate-pulse"
-            style={{ animationDelay: "0.5s" }}
-          >
-            🥗
-          </div>
-        </div>
-      </div>
-
+    <div className="flex flex-1 flex-col">
       {/* Header */}
-      <header className="relative z-10 bg-background/95 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="bg-background border-b">
+        <div className="flex items-center justify-between p-6 max-w-4xl mx-auto w-full">
           <div className="flex items-center space-x-2">
             <Link href="/">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full hover:bg-primary/10"
-              >
+              <Button variant="ghost" size="icon">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
@@ -1117,103 +976,70 @@ export default function OnboardingPage() {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mr-2">
                 <ChefHat className="h-5 w-5 text-primary-foreground" />
               </div>
-              <h1 className="text-xl font-bold text-foreground">ResQr</h1>
+              <h1 className="text-xl font-bold">ResQr</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="hidden sm:flex">
-              {session?.user?.name}
-            </Badge>
+            <Badge variant="secondary">{session?.user?.name}</Badge>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
-        <Card className="w-full max-w-4xl shadow-2xl border-0 bg-background/95 backdrop-blur-sm">
-          <form onSubmit={handleSubmit}>
-            {/* Progress Header */}
-            <div className="px-6 pt-6 pb-4">
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-orange-600 bg-clip-text text-transparent">
-                  Restaurant Onboarding
-                </h1>
-                <Badge variant="outline" className="text-sm">
-                  Step {currentStep} of {totalSteps}
-                </Badge>
-              </div>
+      <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Restaurant Onboarding</h1>
+          <Badge variant="outline">
+            Step {currentStep} of {totalSteps}
+          </Badge>
+        </div>
 
-              {/* Enhanced Progress Bar */}
-              <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-primary to-orange-500 h-3 rounded-full transition-all duration-500 ease-out relative"
-                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                >
-                  <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
-                </div>
-              </div>
+        {/* Progress Bar */}
+        <div className="w-full bg-muted rounded-full h-2">
+          <div
+            className="bg-primary h-2 rounded-full transition-all duration-300"
+            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+          />
+        </div>
 
-              {/* Step Indicators */}
-              <div className="flex justify-between mt-2">
-                {Array.from({ length: totalSteps }, (_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      i + 1 <= currentStep
-                        ? "bg-primary scale-125"
-                        : "bg-muted-foreground/30"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+        <form onSubmit={handleSubmit}>
+          {renderStepContent()}
 
-            {renderStepContent()}
+          {/* Navigation */}
+          <div className="flex justify-between pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1 || loading}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
 
-            {/* Enhanced Footer */}
-            <CardFooter className="flex justify-between pt-8 px-6 pb-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevStep}
-                disabled={currentStep === 1 || loading}
-                className="h-12 px-6"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            {currentStep < totalSteps ? (
+              <Button type="button" onClick={nextStep} disabled={loading}>
+                Next
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-
-              {currentStep < totalSteps ? (
-                <Button
-                  type="button"
-                  onClick={nextStep}
-                  disabled={loading}
-                  className="h-12 px-6 bg-primary hover:bg-primary/90"
-                >
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="h-12 px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Creating Restaurant...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Create Restaurant
-                    </>
-                  )}
-                </Button>
-              )}
-            </CardFooter>
-          </form>
-        </Card>
-      </main>
+            ) : (
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Restaurant...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Create Restaurant
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
