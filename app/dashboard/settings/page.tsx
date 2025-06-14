@@ -46,10 +46,12 @@ import {
   Palette,
   Save,
   Settings,
-  CreditCard,
   AlertCircle,
   Loader2,
   Trash2,
+  Edit,
+  Eye,
+  X,
 } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -67,7 +69,6 @@ type Restaurant = {
   logoImageId: number | null;
   colorTheme: string;
   isActive: boolean;
-  subscriptionTier: string;
 };
 
 export default function Page() {
@@ -85,7 +86,6 @@ export default function Page() {
     logoImageId: null,
     colorTheme: "#dc2626",
     isActive: true,
-    subscriptionTier: "FREE",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -95,6 +95,7 @@ export default function Page() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Fetch restaurant data on component mount
   useEffect(() => {
@@ -127,6 +128,7 @@ export default function Page() {
       } else if (response.status === 404) {
         // No restaurant found - this is for new restaurant creation
         setHasRestaurant(false);
+        setIsEditing(true); // Start in edit mode for new restaurant
       } else {
         throw new Error(data.error || "Failed to fetch restaurant");
       }
@@ -184,7 +186,6 @@ export default function Page() {
           description: form.description?.trim() || null,
           logoImageId: form.logoImageId,
           colorTheme: form.colorTheme,
-          subscriptionTier: form.subscriptionTier,
         }),
       });
 
@@ -193,6 +194,7 @@ export default function Page() {
       if (response.ok && data.success) {
         setForm((prev) => ({ ...prev, ...data.data }));
         setHasRestaurant(true);
+        setIsEditing(false);
         toast.success(
           hasRestaurant
             ? "Restaurant updated successfully!"
@@ -241,11 +243,11 @@ export default function Page() {
           logoImageId: null,
           colorTheme: "#dc2626",
           isActive: true,
-          subscriptionTier: "FREE",
         });
         setHasRestaurant(false);
         setIsDeleteDialogOpen(false);
         setDeleteConfirmText("");
+        setIsEditing(true); // Switch to edit mode after deletion
         toast.success("Restaurant deleted successfully!");
       } else {
         throw new Error(data.error || "Failed to delete restaurant");
@@ -266,16 +268,15 @@ export default function Page() {
     setDeleteConfirmText("");
   };
 
-  const subscriptionTiers = [
-    { value: "FREE", label: "Free Plan", color: "bg-gray-100 text-gray-800" },
-    { value: "BASIC", label: "Basic Plan", color: "bg-blue-100 text-blue-800" },
-    { value: "PRO", label: "Pro Plan", color: "bg-purple-100 text-purple-800" },
-    {
-      value: "ENTERPRISE",
-      label: "Enterprise",
-      color: "bg-gold-100 text-gold-800",
-    },
-  ];
+  const handleCancelEdit = () => {
+    if (!hasRestaurant) {
+      // If no restaurant exists, we can't cancel to view mode
+      return;
+    }
+    setIsEditing(false);
+    // Reset form to original data
+    fetchRestaurant();
+  };
 
   const isDeleteConfirmValid = deleteConfirmText.trim() === form.name?.trim();
 
@@ -302,6 +303,54 @@ export default function Page() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Display component for read-only view
+  const DisplayField = ({
+    label,
+    value,
+    icon: Icon,
+    type = "text",
+  }: {
+    label: string;
+    value: string | null;
+    icon?: any;
+    type?: "text" | "email" | "url";
+  }) => {
+    if (!value) return null;
+
+    const renderValue = () => {
+      if (type === "email") {
+        return (
+          <a href={`mailto:${value}`} className="text-primary hover:underline">
+            {value}
+          </a>
+        );
+      }
+      if (type === "url") {
+        return (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            {value}
+          </a>
+        );
+      }
+      return <span>{value}</span>;
+    };
+
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          {Icon && <Icon className="h-4 w-4" />}
+          {label}
+        </div>
+        <div className="text-sm">{renderValue()}</div>
+      </div>
+    );
   };
 
   if (isInitialLoading) {
@@ -332,22 +381,48 @@ export default function Page() {
       <div className="flex flex-1 flex-col bg-muted/20">
         <div className="container mx-auto p-6 max-w-6xl space-y-8">
           {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Settings className="h-6 w-6 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Settings className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {hasRestaurant
+                    ? "Restaurant Settings"
+                    : "Create Your Restaurant"}
+                </h1>
+                <p className="text-muted-foreground">
+                  {hasRestaurant
+                    ? "Manage your restaurant information and preferences"
+                    : "Set up your restaurant profile to get started"}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {hasRestaurant
-                  ? "Restaurant Settings"
-                  : "Create Your Restaurant"}
-              </h1>
-              <p className="text-muted-foreground">
-                {hasRestaurant
-                  ? "Manage your restaurant information and preferences"
-                  : "Set up your restaurant profile to get started"}
-              </p>
-            </div>
+
+            {/* Edit/View Toggle Button */}
+            {hasRestaurant && (
+              <div className="flex items-center gap-2">
+                {isEditing ? (
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    className="flex items-center gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Error Alert */}
@@ -359,7 +434,7 @@ export default function Page() {
           )}
 
           <div className="grid gap-8 md:grid-cols-3">
-            {/* Main Settings - Takes 2/3 width */}
+            {/* Main Content - Takes 2/3 width */}
             <div className="md:col-span-2 space-y-6">
               {/* Basic Information */}
               <Card className="shadow-sm">
@@ -373,56 +448,84 @@ export default function Page() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Restaurant Name *</Label>
-                      <Input
-                        id="name"
-                        value={form.name ?? ""}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, name: e.target.value }))
-                        }
-                        placeholder="Enter restaurant name"
-                        className="font-medium"
+                  {isEditing ? (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Restaurant Name *</Label>
+                          <Input
+                            id="name"
+                            value={form.name ?? ""}
+                            onChange={(e) =>
+                              setForm((f) => ({ ...f, name: e.target.value }))
+                            }
+                            placeholder="Enter restaurant name"
+                            className="font-medium"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cuisineType">Cuisine Type</Label>
+                          <Select
+                            value={form.cuisineType ?? ""}
+                            onValueChange={(value) =>
+                              setForm((f) => ({
+                                ...f,
+                                cuisineType: value || null,
+                              }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select cuisine type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cuisineTypes.map((cuisine) => (
+                                <SelectItem key={cuisine} value={cuisine}>
+                                  {cuisine}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          value={form.description ?? ""}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              description: e.target.value || null,
+                            }))
+                          }
+                          placeholder="Describe your restaurant..."
+                          className="min-h-[100px] resize-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground">
+                            Restaurant Name
+                          </div>
+                          <div className="text-lg font-semibold">
+                            {form.name || "Not set"}
+                          </div>
+                        </div>
+                        <DisplayField
+                          label="Cuisine Type"
+                          value={form.cuisineType}
+                        />
+                      </div>
+                      <DisplayField
+                        label="Description"
+                        value={form.description}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cuisineType">Cuisine Type</Label>
-                      <Select
-                        value={form.cuisineType ?? ""}
-                        onValueChange={(value) =>
-                          setForm((f) => ({ ...f, cuisineType: value || null }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select cuisine type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cuisineTypes.map((cuisine) => (
-                            <SelectItem key={cuisine} value={cuisine}>
-                              {cuisine}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={form.description ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          description: e.target.value || null,
-                        }))
-                      }
-                      placeholder="Describe your restaurant..."
-                      className="min-h-[100px] resize-none"
-                    />
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -436,71 +539,96 @@ export default function Page() {
                   <CardDescription>How customers can reach you</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="email"
-                        className="flex items-center gap-2"
-                      >
-                        <Mail className="h-4 w-4" />
-                        Email Address
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={form.email ?? ""}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            email: e.target.value || null,
-                          }))
-                        }
-                        placeholder="restaurant@example.com"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="phone"
-                        className="flex items-center gap-2"
-                      >
-                        <Phone className="h-4 w-4" />
-                        Phone Number
-                      </Label>
-                      <Input
-                        id="phone"
-                        value={form.phone ?? ""}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            phone: e.target.value || null,
-                          }))
-                        }
-                        placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
-                  </div>
+                  {isEditing ? (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="email"
+                            className="flex items-center gap-2"
+                          >
+                            <Mail className="h-4 w-4" />
+                            Email Address
+                          </Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={form.email ?? ""}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                email: e.target.value || null,
+                              }))
+                            }
+                            placeholder="restaurant@example.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="phone"
+                            className="flex items-center gap-2"
+                          >
+                            <Phone className="h-4 w-4" />
+                            Phone Number
+                          </Label>
+                          <Input
+                            id="phone"
+                            value={form.phone ?? ""}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                phone: e.target.value || null,
+                              }))
+                            }
+                            placeholder="+1 (555) 123-4567"
+                          />
+                        </div>
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="address"
-                      className="flex items-center gap-2"
-                    >
-                      <MapPin className="h-4 w-4" />
-                      Address
-                    </Label>
-                    <Textarea
-                      id="address"
-                      value={form.address ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          address: e.target.value || null,
-                        }))
-                      }
-                      placeholder="123 Main Street, City, State, ZIP Code"
-                      className="min-h-[80px] resize-none"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="address"
+                          className="flex items-center gap-2"
+                        >
+                          <MapPin className="h-4 w-4" />
+                          Address
+                        </Label>
+                        <Textarea
+                          id="address"
+                          value={form.address ?? ""}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              address: e.target.value || null,
+                            }))
+                          }
+                          placeholder="123 Main Street, City, State, ZIP Code"
+                          className="min-h-[80px] resize-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <DisplayField
+                        label="Email Address"
+                        value={form.email}
+                        icon={Mail}
+                        type="email"
+                      />
+                      <DisplayField
+                        label="Phone Number"
+                        value={form.phone}
+                        icon={Phone}
+                      />
+                      <div className="md:col-span-2">
+                        <DisplayField
+                          label="Address"
+                          value={form.address}
+                          icon={MapPin}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -516,48 +644,66 @@ export default function Page() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="googleBusinessUrl"
-                      className="flex items-center gap-2"
-                    >
-                      <Globe className="h-4 w-4" />
-                      Google Business URL
-                    </Label>
-                    <Input
-                      id="googleBusinessUrl"
-                      value={form.googleBusinessUrl ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          googleBusinessUrl: e.target.value || null,
-                        }))
-                      }
-                      placeholder="https://business.google.com/your-restaurant"
-                    />
-                  </div>
+                  {isEditing ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="googleBusinessUrl"
+                          className="flex items-center gap-2"
+                        >
+                          <Globe className="h-4 w-4" />
+                          Google Business URL
+                        </Label>
+                        <Input
+                          id="googleBusinessUrl"
+                          value={form.googleBusinessUrl ?? ""}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              googleBusinessUrl: e.target.value || null,
+                            }))
+                          }
+                          placeholder="https://business.google.com/your-restaurant"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="googleRating"
-                      className="flex items-center gap-2"
-                    >
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      Google Rating
-                    </Label>
-                    <Input
-                      id="googleRating"
-                      value={form.googleRating ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          googleRating: e.target.value || null,
-                        }))
-                      }
-                      placeholder="4.5"
-                      className="max-w-20"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="googleRating"
+                          className="flex items-center gap-2"
+                        >
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          Google Rating
+                        </Label>
+                        <Input
+                          id="googleRating"
+                          value={form.googleRating ?? ""}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              googleRating: e.target.value || null,
+                            }))
+                          }
+                          placeholder="4.5"
+                          className="max-w-20"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <DisplayField
+                        label="Google Business URL"
+                        value={form.googleBusinessUrl}
+                        icon={Globe}
+                        type="url"
+                      />
+                      <DisplayField
+                        label="Google Rating"
+                        value={form.googleRating}
+                        icon={Star}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -573,40 +719,91 @@ export default function Page() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="colorTheme">Brand Color</Label>
-                    <div className="flex items-center gap-3">
-                      <Input
-                        id="colorTheme"
-                        type="color"
-                        value={form.colorTheme}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, colorTheme: e.target.value }))
-                        }
-                        className="w-16 h-10 rounded-md border cursor-pointer"
-                      />
-                      <Input
-                        value={form.colorTheme}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, colorTheme: e.target.value }))
-                        }
-                        placeholder="#dc2626"
-                        className="font-mono"
-                      />
-                    </div>
-                  </div>
+                  {isEditing ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="colorTheme">Brand Color</Label>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            id="colorTheme"
+                            type="color"
+                            value={form.colorTheme}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                colorTheme: e.target.value,
+                              }))
+                            }
+                            className="w-16 h-10 rounded-md border cursor-pointer"
+                          />
+                          <Input
+                            value={form.colorTheme}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                colorTheme: e.target.value,
+                              }))
+                            }
+                            placeholder="#dc2626"
+                            className="font-mono"
+                          />
+                        </div>
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label>Restaurant Logo</Label>
-                    <ImageUpload
-                      currentImage={form.logoUrl}
-                      onImageUploaded={handleImageUploaded}
-                      onImageRemoved={handleImageRemoved}
-                      fallbackText={getRestaurantInitials()}
-                      disabled={isLoading}
-                      size="lg"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label>Restaurant Logo</Label>
+                        <ImageUpload
+                          currentImage={form.logoUrl}
+                          onImageUploaded={handleImageUploaded}
+                          onImageRemoved={handleImageRemoved}
+                          fallbackText={getRestaurantInitials()}
+                          disabled={isLoading}
+                          size="lg"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          Brand Color
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-md border"
+                            style={{ backgroundColor: form.colorTheme }}
+                          />
+                          <span className="font-mono text-sm">
+                            {form.colorTheme}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          Restaurant Logo
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {form.logoUrl ? (
+                            <img
+                              src={form.logoUrl}
+                              alt="Restaurant Logo"
+                              className="w-16 h-16 rounded-lg object-cover border"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center border">
+                              <span className="text-lg font-semibold text-muted-foreground">
+                                {getRestaurantInitials()}
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {form.logoUrl ? "Custom logo" : "Default initials"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -628,89 +825,66 @@ export default function Page() {
                         Make your restaurant visible to customers
                       </p>
                     </div>
-                    <Switch
-                      id="isActive"
-                      checked={form.isActive}
-                      onCheckedChange={(checked) =>
-                        setForm((f) => ({ ...f, isActive: checked }))
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Subscription */}
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Subscription
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Current Plan</Label>
-                    <Badge
-                      className={
-                        subscriptionTiers.find(
-                          (t) => t.value === form.subscriptionTier
-                        )?.color
-                      }
-                    >
-                      {
-                        subscriptionTiers.find(
-                          (t) => t.value === form.subscriptionTier
-                        )?.label
-                      }
-                    </Badge>
-                  </div>
-
-                  <Select
-                    value={form.subscriptionTier}
-                    onValueChange={(value) =>
-                      setForm((f) => ({ ...f, subscriptionTier: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subscriptionTiers.map((tier) => (
-                        <SelectItem key={tier.value} value={tier.value}>
-                          {tier.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-
-              {/* Save Button */}
-              <Card className="shadow-sm">
-                <CardContent className="pt-6">
-                  <Button
-                    onClick={handleSave}
-                    disabled={isLoading || !form.name?.trim()}
-                    className="w-full flex items-center gap-2"
-                    size="lg"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {hasRestaurant ? "Updating..." : "Creating..."}
-                      </>
+                    {isEditing ? (
+                      <Switch
+                        id="isActive"
+                        checked={form.isActive}
+                        onCheckedChange={(checked) =>
+                          setForm((f) => ({ ...f, isActive: checked }))
+                        }
+                      />
                     ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        {hasRestaurant ? "Save Changes" : "Create Restaurant"}
-                      </>
+                      <Badge
+                        variant={form.isActive ? "default" : "secondary"}
+                        className="ml-2"
+                      >
+                        {form.isActive ? "Active" : "Inactive"}
+                      </Badge>
                     )}
-                  </Button>
+                  </div>
                 </CardContent>
               </Card>
 
-              {/* Delete Button - Only show if restaurant exists */}
-              {hasRestaurant && (
+              {/* Action Buttons */}
+              {isEditing && (
+                <Card className="shadow-sm">
+                  <CardContent className="pt-6 space-y-3">
+                    <Button
+                      onClick={handleSave}
+                      disabled={isLoading || !form.name?.trim()}
+                      className="w-full flex items-center gap-2"
+                      size="lg"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {hasRestaurant ? "Updating..." : "Creating..."}
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          {hasRestaurant ? "Save Changes" : "Create Restaurant"}
+                        </>
+                      )}
+                    </Button>
+
+                    {hasRestaurant && (
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        className="w-full flex items-center gap-2"
+                        size="lg"
+                      >
+                        <X className="h-4 w-4" />
+                        Cancel
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Delete Button - Only show if restaurant exists and in edit mode */}
+              {hasRestaurant && isEditing && (
                 <Card className="shadow-sm border-destructive/20">
                   <CardHeader>
                     <CardTitle className="text-lg text-destructive flex items-center gap-2">

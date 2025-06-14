@@ -120,7 +120,30 @@ export default function BillingPage() {
       },
     });
   };
+  const handleRenewSubscription = async () => {
+    if (!razorpayLoaded || !subscription) {
+      toast.error("Payment system is loading. Please try again.");
+      return;
+    }
 
+    setActionLoading("renew");
+    const planType = subscription.interval === "year" ? "yearly" : "monthly";
+    const amount = planType === "yearly" ? 3999 : 299;
+
+    await initializePayment({
+      amount,
+      planType,
+      userEmail: userInfo?.email || "",
+      userName: userInfo?.name || "",
+      onSuccess: () => {
+        fetchBillingData();
+        setActionLoading(null);
+      },
+      onError: () => {
+        setActionLoading(null);
+      },
+    });
+  };
   const handleCancelSubscription = async () => {
     setActionLoading("cancel");
     try {
@@ -269,7 +292,35 @@ export default function BillingPage() {
                     </div>
                   </div>
 
-                  {subscription.status !== "cancelled" && (
+                  {subscription.status === "cancelled" ||
+                  subscription.status === "canceled" ? (
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        variant="default"
+                        onClick={handleRenewSubscription}
+                        disabled={actionLoading === "renew"}
+                        className="text-sm sm:text-base"
+                        size="sm"
+                      >
+                        {actionLoading === "renew" ? (
+                          <>
+                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
+                            <span className="hidden sm:inline">
+                              Renewing...
+                            </span>
+                            <span className="sm:hidden">Renew...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="hidden sm:inline">
+                              Renew Subscription
+                            </span>
+                            <span className="sm:hidden">Renew</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
                     <div className="flex gap-3 pt-4">
                       <Button
                         variant="destructive"
@@ -303,95 +354,272 @@ export default function BillingPage() {
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription className="text-sm">
-                      No active subscription found. Choose a plan to get
-                      started.
+                      No active subscription found. You are on the{" "}
+                      <b>Free Plan</b>. Upgrade to unlock all premium features!
                     </AlertDescription>
                   </Alert>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Card>
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="text-center space-y-3 sm:space-y-4">
-                          <h3 className="text-base sm:text-lg font-semibold">
-                            Monthly Plan
-                          </h3>
-                          <div className="text-2xl sm:text-3xl font-bold">
-                            ₹299
-                          </div>
-                          <p className="text-sm sm:text-base text-muted-foreground">
-                            per month
-                          </p>
-                          <Button
-                            className="w-full text-sm sm:text-base"
-                            onClick={() => handleSubscribe("monthly")}
-                            disabled={actionLoading === "monthly"}
-                            size="sm"
-                          >
-                            {actionLoading === "monthly" ? (
-                              <>
-                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
-                                <span className="hidden sm:inline">
-                                  Processing...
-                                </span>
-                                <span className="sm:hidden">Wait...</span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="hidden sm:inline">
-                                  Subscribe Monthly
-                                </span>
-                                <span className="sm:hidden">Monthly</span>
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  {/* Save Offer Card */}
+                  <Card className="bg-gradient-to-r from-orange-100 to-yellow-50 border-0 shadow-none">
+                    <CardContent className="flex flex-col items-center py-4">
+                      <div className="text-lg sm:text-xl font-semibold text-orange-700 mb-1">
+                        Save ₹589!
+                      </div>
+                      <div className="text-sm sm:text-base text-muted-foreground text-center">
+                        Get 2 months free with the <b>Annual Plan</b> compared
+                        to monthly payments.
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                    <Card>
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="text-center space-y-3 sm:space-y-4">
-                          <h3 className="text-base sm:text-lg font-semibold">
-                            Annual Plan
-                          </h3>
-                          <div className="text-2xl sm:text-3xl font-bold">
-                            ₹3,999
-                          </div>
-                          <p className="text-sm sm:text-base text-muted-foreground">
-                            per year
-                          </p>
-                          <Badge
-                            variant="secondary"
-                            className="mb-2 text-xs sm:text-sm"
-                          >
-                            Save ₹589!
-                          </Badge>
-                          <Button
-                            className="w-full text-sm sm:text-base"
-                            onClick={() => handleSubscribe("yearly")}
-                            disabled={actionLoading === "yearly"}
-                            size="sm"
-                          >
-                            {actionLoading === "yearly" ? (
-                              <>
-                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
-                                <span className="hidden sm:inline">
-                                  Processing...
-                                </span>
-                                <span className="sm:hidden">Wait...</span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="hidden sm:inline">
-                                  Subscribe Annually
-                                </span>
-                                <span className="sm:hidden">Annual</span>
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  {/* Feature Comparison Table */}
+                  <div className="w-full overflow-x-auto">
+                    <div className="bg-background rounded-xl shadow-md p-0">
+                      <table className="min-w-[650px] w-full text-sm sm:text-base rounded-xl overflow-hidden">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="py-4 px-4 text-left font-semibold"></th>
+                            <th className="py-4 px-4 text-center font-semibold">
+                              Free
+                            </th>
+                            <th className="py-4 px-4 text-center font-semibold">
+                              Monthly
+                            </th>
+                            <th className="py-4 px-4 text-center font-semibold">
+                              Annual
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Price */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">Price</td>
+                            <td className="py-3 px-4 text-center">₹0</td>
+                            <td className="py-3 px-4 text-center">₹299/mo</td>
+                            <td className="py-3 px-4 text-center">₹3,999/yr</td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Menus */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">Menus</td>
+                            <td className="py-3 px-4 text-center">1</td>
+                            <td className="py-3 px-4 text-center">Unlimited</td>
+                            <td className="py-3 px-4 text-center">Unlimited</td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Categories */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">
+                              Categories
+                            </td>
+                            <td className="py-3 px-4 text-center">4</td>
+                            <td className="py-3 px-4 text-center">Unlimited</td>
+                            <td className="py-3 px-4 text-center">Unlimited</td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Items */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">Items</td>
+                            <td className="py-3 px-4 text-center">20</td>
+                            <td className="py-3 px-4 text-center">Unlimited</td>
+                            <td className="py-3 px-4 text-center">Unlimited</td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Analytics */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">Analytics</td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              —
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Immediate Support */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">
+                              Immediate Support
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              —
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Custom QR Generation */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">
+                              Custom QR Generation
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              Not available
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              On request only
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              On request only
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Custom Branding */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">
+                              Custom Branding
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              Not available
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              On request only
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              On request only
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Early Features Sneak Peeks */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">
+                              Early Features Sneak Peeks
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              —
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4}>
+                              <div className="bg-gray-300 h-px mx-8 my-1 rounded-full" />
+                            </td>
+                          </tr>
+                          {/* Feedback System */}
+                          <tr>
+                            <td className="py-3 px-4 font-medium">
+                              Feedback System
+                            </td>
+                            <td className="py-3 px-4 text-center text-muted-foreground">
+                              —
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                            <td className="py-3 px-4 text-center text-green-600 font-semibold">
+                              ✔
+                            </td>
+                          </tr>
+                          {/* Buttons Row */}
+                          <tr>
+                            <td className="py-4 px-4"></td>
+                            <td className="py-4 px-4 text-center align-middle">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs sm:text-sm"
+                              >
+                                Current Plan
+                              </Badge>
+                            </td>
+                            <td className="py-4 px-4 text-center align-middle">
+                              <Button
+                                className="w-full max-w-xs text-xs sm:text-base"
+                                onClick={() => handleSubscribe("monthly")}
+                                disabled={actionLoading === "monthly"}
+                                size="sm"
+                              >
+                                {actionLoading === "monthly" ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
+                                    <span className="hidden sm:inline">
+                                      Processing...
+                                    </span>
+                                    <span className="sm:hidden">Wait...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="hidden sm:inline">
+                                      Subscribe Monthly
+                                    </span>
+                                    <span className="sm:hidden">Monthly</span>
+                                  </>
+                                )}
+                              </Button>
+                            </td>
+                            <td className="py-4 px-4 text-center align-middle">
+                              <Button
+                                className="w-full max-w-xs text-xs sm:text-base"
+                                onClick={() => handleSubscribe("yearly")}
+                                disabled={actionLoading === "yearly"}
+                                size="sm"
+                              >
+                                {actionLoading === "yearly" ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
+                                    <span className="hidden sm:inline">
+                                      Processing...
+                                    </span>
+                                    <span className="sm:hidden">Wait...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="hidden sm:inline">
+                                      Subscribe Annually
+                                    </span>
+                                    <span className="sm:hidden">Annual</span>
+                                  </>
+                                )}
+                              </Button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      {/* Buttons Row */}
+                    </div>
                   </div>
                 </div>
               )}
