@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -34,6 +33,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import {
@@ -44,12 +44,10 @@ import {
   Globe,
   Star,
   Palette,
-  Upload,
   Save,
   Settings,
   CreditCard,
   AlertCircle,
-  CheckCircle,
   Loader2,
   Trash2,
 } from "lucide-react";
@@ -123,6 +121,7 @@ export default function Page() {
           cuisineType: data.data.cuisineType,
           description: data.data.description,
           logoUrl: data.data.logoUrl,
+          logoImageId: data.data.logoImageId,
         });
         setHasRestaurant(true);
       } else if (response.status === 404) {
@@ -139,6 +138,22 @@ export default function Page() {
     } finally {
       setIsInitialLoading(false);
     }
+  };
+
+  const handleImageUploaded = (imageUrl: string, imageId: number) => {
+    setForm((prev) => ({
+      ...prev,
+      logoUrl: imageUrl,
+      logoImageId: imageId,
+    }));
+  };
+
+  const handleImageRemoved = () => {
+    setForm((prev) => ({
+      ...prev,
+      logoUrl: null,
+      logoImageId: null,
+    }));
   };
 
   const handleSave = async () => {
@@ -279,12 +294,20 @@ export default function Page() {
     "Other",
   ];
 
-  // Loading component with Loader2
+  const getRestaurantInitials = () => {
+    if (!form.name) return "?";
+    return form.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   if (isInitialLoading) {
     return (
       <>
-        <SiteHeader title="QR Codes" />
+        <SiteHeader title="Restaurant Settings" />
         <div className="flex flex-1 flex-col items-center justify-center p-4">
           <Loader2 className="h-8 w-8 animate-spin" />
           <p className="text-muted-foreground mt-2 text-center">
@@ -307,7 +330,7 @@ export default function Page() {
     <>
       <SiteHeader title="Restaurant Settings" />
       <div className="flex flex-1 flex-col bg-muted/20">
-        <div className="container mx-auto p-6 max-w-9xl space-y-8">
+        <div className="container mx-auto p-6 max-w-6xl space-y-8">
           {/* Header */}
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
@@ -315,7 +338,9 @@ export default function Page() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                {hasRestaurant ? "" : "Create Your Restaurant"}
+                {hasRestaurant
+                  ? "Restaurant Settings"
+                  : "Create Your Restaurant"}
               </h1>
               <p className="text-muted-foreground">
                 {hasRestaurant
@@ -547,7 +572,7 @@ export default function Page() {
                     Customize your restaurant's visual identity
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="colorTheme">Brand Color</Label>
                     <div className="flex items-center gap-3">
@@ -573,27 +598,14 @@ export default function Page() {
 
                   <div className="space-y-2">
                     <Label>Restaurant Logo</Label>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={form.logoUrl ?? undefined} />
-                        <AvatarFallback className="text-lg font-bold">
-                          {form.name
-                            ? form.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .toUpperCase()
-                            : "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                      >
-                        <Upload className="h-4 w-4" />
-                        Upload Logo
-                      </Button>
-                    </div>
+                    <ImageUpload
+                      currentImage={form.logoUrl}
+                      onImageUploaded={handleImageUploaded}
+                      onImageRemoved={handleImageRemoved}
+                      fallbackText={getRestaurantInitials()}
+                      disabled={isLoading}
+                      size="lg"
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -785,6 +797,14 @@ export default function Page() {
           </div>
         </div>
       </div>
+
+      <Toaster
+        toastOptions={{
+          style: {
+            fontFamily: "var(--font-outfit)",
+          },
+        }}
+      />
     </>
   );
 }

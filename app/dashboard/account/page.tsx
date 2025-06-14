@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { UserImageUpload } from "@/components/user-image-upload";
 
 interface User {
   id: string;
@@ -145,7 +146,7 @@ export default function AccountPage() {
     try {
       const updateData: any = {
         name: editForm.name,
-        image: editForm.image,
+        // Image is handled separately by the UserImageUpload component
       };
 
       // Only include email if it's different
@@ -280,35 +281,19 @@ export default function AccountPage() {
                 <form onSubmit={handleEditSubmit} className="space-y-6">
                   <Tabs defaultValue="profile" className="w-full">
                     <TabsContent value="profile" className="space-y-4">
-                      <div className="flex flex-col items-center space-y-4">
-                        <Avatar className="h-20 w-20 ">
-                          <AvatarImage
-                            src={editForm.image}
-                            alt={editForm.name}
-                          />
-                          <AvatarFallback className="text-lg">
-                            {editForm.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="w-full ">
-                          <Label htmlFor="image" className="py-2">
-                            Profile Image URL
-                          </Label>
-                          <Input
-                            id="image"
-                            type="url"
-                            value={editForm.image}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                image: e.target.value,
-                              })
-                            }
-                            placeholder="https://example.com/image.jpg"
-                            disabled={editLoading}
-                          />
-                        </div>
-                      </div>
+                      {/* Replace the existing image section with UserImageUpload */}
+                      <UserImageUpload
+                        currentImage={user.image}
+                        userName={user.name}
+                        onImageUploaded={(imageUrl) => {
+                          // Update the user state immediately for UI feedback
+                          setUser((prev) =>
+                            prev ? { ...prev, image: imageUrl } : null
+                          );
+                        }}
+                        disabled={editLoading}
+                        size="lg"
+                      />
 
                       <div>
                         <Label htmlFor="name" className="py-2">
