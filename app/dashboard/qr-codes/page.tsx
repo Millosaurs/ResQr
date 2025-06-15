@@ -29,7 +29,7 @@ interface RestaurantData {
 
 interface QRCodesResponse {
   restaurant: RestaurantData;
-  qrCodes: QRCodeData[];
+  qrCode: QRCodeData[];
 }
 
 export default function QRCodesPage() {
@@ -49,7 +49,7 @@ export default function QRCodesPage() {
         throw new Error("Failed to fetch QR codes");
       }
       const data: QRCodesResponse = await response.json();
-      setQrCodes(data.qrCodes);
+      setQrCodes(data.qrCode);
       setRestaurant(data.restaurant);
     } catch (error) {
       console.error("Error fetching QR codes:", error);

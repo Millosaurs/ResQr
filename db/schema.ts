@@ -340,3 +340,55 @@ export const qrCodes = pgTable(
     }).onDelete("cascade"),
   ]
 );
+
+export const qrMenuAnalytics = pgTable(
+  "qr_menu_analytics",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    qrCodeId: uuid("qr_code_id").notNull(),
+    menuId: uuid("menu_id").notNull(),
+    restaurantId: uuid("restaurant_id").notNull(),
+    scannedAt: timestamp("scanned_at", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+    userAgent: text("user_agent"),
+    ipAddress: text("ip_address"),
+    sessionId: text("session_id"),
+    userId: text("user_id"),
+    referrer: text("referrer"),
+    deviceType: text("device_type"),
+    browser: text("browser"),
+    os: text("os"),
+    location: text("location"),
+    scanSource: text("scan_source"),
+    menuItemId: uuid("menu_item_id"), // If you want to track which menu item was viewed/clicked
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.qrCodeId],
+      foreignColumns: [qrCodes.id],
+      name: "qr_menu_analytics_qr_code_id_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.menuId],
+      foreignColumns: [menus.id],
+      name: "qr_menu_analytics_menu_id_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.restaurantId],
+      foreignColumns: [restaurants.id],
+      name: "qr_menu_analytics_restaurant_id_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.userId],
+      foreignColumns: [user.id],
+      name: "qr_menu_analytics_user_id_fk",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.menuItemId],
+      foreignColumns: [menuItems.id],
+      name: "qr_menu_analytics_menu_item_id_fk",
+    }).onDelete("set null"),
+  ]
+);

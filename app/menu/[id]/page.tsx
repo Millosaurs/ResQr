@@ -32,6 +32,7 @@ import {
 import Image from "next/image";
 import Head from "next/head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSearchParams } from "next/navigation";
 
 interface MenuItem {
   id: string;
@@ -103,6 +104,41 @@ export default function PublicMenuPage({
     isSpicy: false,
     availableOnly: false,
   });
+  const searchParams = useSearchParams();
+  const qrCodeId = searchParams.get("qr");
+
+  useEffect(() => {
+    let isMounted = true;
+    params
+      .then(({ id }) => {
+        if (isMounted) {
+          setMenuId(id);
+          const urlParams = new URLSearchParams(window.location.search);
+          setIsPreview(urlParams.has("preview"));
+
+          // Track the scan here, after id is available
+          fetch("/api/qr-analytics/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              menuId: id,
+              qrCodeId,
+            }),
+          });
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.error("Error extracting params:", err);
+          setError("Invalid menu URL");
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [params]);
 
   // Extract params
   useEffect(() => {

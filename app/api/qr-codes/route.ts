@@ -1,14 +1,13 @@
 // app/api/qr-codes/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db"; // Adjust the import path to your db instance
-import { restaurants, menus } from "@/db/schema"; // Adjust the import path
-import { eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth"; // Adjust to your auth implementation
+import { db } from "@/db";
+import { restaurants, menus, qrCodes } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the current user (adjust this based on your auth implementation)
     const session = await auth.api.getSession({
       headers: await headers(),
     });
@@ -17,23 +16,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's restaurant
-    const userRestaurant = await db
+    const [restaurant] = await db
       .select()
       .from(restaurants)
       .where(eq(restaurants.ownerId, session.user.id))
       .limit(1);
 
-    if (!userRestaurant.length) {
+    if (!restaurant) {
       return NextResponse.json(
         { error: "Restaurant not found" },
         { status: 404 }
       );
     }
 
-    const restaurant = userRestaurant[0];
-
     // Get all published menus for this restaurant
-    const restaurantMenus = await db
+    const menuRows = await db
       .select()
       .from(menus)
       .where(
@@ -42,21 +39,33 @@ export async function GET(request: NextRequest) {
           eq(menus.isPublished, true),
           eq(menus.isActive, true)
         )
-      )
-      .orderBy(menus.displayOrder);
+      );
 
-    // Generate QR code data
-    const qrCodes = restaurantMenus.map((menu) => ({
-      id: menu.id,
-      menuName: menu.name,
-      menuSlug: menu.slug,
-      restaurantName: restaurant.name,
-      restaurantId: restaurant.id,
-      // Generate the public menu URL - adjust domain as needed
-      menuUrl: `${
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-      }/menu/${menu.id}`,
-    }));
+    // Get all QR codes for these menus
+    const menuIds = menuRows.map((m) => m.id);
+    const qrRows = await db
+      .select()
+      .from(qrCodes)
+      .where(inArray(qrCodes.menuId, menuIds));
+
+    // Map menuId -> QR code
+    const qrMap = new Map(qrRows.map((qr) => [qr.menuId, qr]));
+
+    // Compose response
+    const qrCode = menuRows.map((menu) => {
+      const qr = qrMap.get(menu.id);
+      return {
+        id: qr?.id ?? "", // qrCodeId
+        menuName: menu.name,
+        menuSlug: menu.slug,
+        restaurantName: restaurant.name,
+        restaurantId: restaurant.id,
+        menuUrl: `${
+          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+        }/menu/${menu.id}?qr=${qr?.id ?? ""}`,
+        qrCodeImageUrl: undefined, // If you store image, add here
+      };
+    });
 
     return NextResponse.json({
       restaurant: {
@@ -66,7 +75,7 @@ export async function GET(request: NextRequest) {
         phone: restaurant.phone,
         email: restaurant.email,
       },
-      qrCodes,
+      qrCode,
     });
   } catch (error) {
     console.error("Error fetching QR codes:", error);
