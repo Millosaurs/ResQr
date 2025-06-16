@@ -101,7 +101,12 @@ export default function MenuManagement() {
     description: "",
     isActive: true,
   });
-
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(
+    null
+  );
+  const isFreeUser =
+    !subscriptionStatus ||
+    ["CANCELLED", "EXPIRED", "PENDING"].includes(subscriptionStatus);
   const router = useRouter();
 
   useEffect(() => {
@@ -151,19 +156,19 @@ export default function MenuManagement() {
       const response = await fetch("/api/menus");
 
       if (response.status === 404) {
-        // No restaurant found
         setHasRestaurant(false);
         setMenus([]);
+        setSubscriptionStatus(null);
       } else if (response.ok) {
         const data = await response.json();
         setHasRestaurant(true);
-        // Fix: Access data.data instead of data directly
+        setSubscriptionStatus(data.subscriptionStatus ?? null);
         setMenus(Array.isArray(data.data) ? data.data : []);
       } else {
         const errorData = await response.json();
         console.error("API Error:", errorData);
+        setSubscriptionStatus(null);
 
-        // Check if error is related to no restaurant
         if (
           errorData.error &&
           errorData.error.toLowerCase().includes("restaurant")
@@ -179,6 +184,7 @@ export default function MenuManagement() {
       console.error("Error fetching menus:", error);
       toast.error("Failed to load menus");
       setMenus([]);
+      setSubscriptionStatus(null);
     } finally {
       setLoading(false);
     }
@@ -325,7 +331,7 @@ export default function MenuManagement() {
   if (loading) {
     return (
       <>
-        <SiteHeader title="QR Codes" />
+        <SiteHeader title="Menus" />
         <div className="flex flex-1 flex-col items-center justify-center p-4">
           <Loader2 className="h-8 w-8 animate-spin" />
           <p className="text-muted-foreground mt-2 text-center">
@@ -409,13 +415,27 @@ export default function MenuManagement() {
                   </Badge>
                 </div>
               </div>
-              <Button
-                onClick={() => setOpen(true)}
-                className="w-full sm:w-auto"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Menu
-              </Button>
+              <div className="flex flex-col items-end w-full sm:w-auto gap-2">
+                <Button
+                  onClick={() => setOpen(true)}
+                  className="w-full sm:w-auto"
+                  disabled={isFreeUser && menus.length >= 1}
+                  title={
+                    isFreeUser && menus.length >= 1
+                      ? "Upgrade your subscription to add more menus"
+                      : undefined
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Menu
+                </Button>
+
+                {isFreeUser && menus.length >= 1 && (
+                  <div className="text-sm text-destructive text-right w-full">
+                    Free users can only create one menu. Upgrade to add more.
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Filter and Search Row */}
@@ -466,7 +486,6 @@ export default function MenuManagement() {
             </div>
           </div>
         )}
-
         {/* Menu Grid - Responsive grid layout */}
         <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 px-3 sm:px-4 md:px-6 lg:px-8 pb-6">
           {filteredMenus.map((menu) => (
@@ -635,7 +654,6 @@ export default function MenuManagement() {
             </Card>
           ))}
         </div>
-
         {/* No results state */}
         {filteredMenus.length === 0 && menus.length > 0 && (
           <div className="text-center py-12 px-4">
@@ -654,7 +672,6 @@ export default function MenuManagement() {
             </Button>
           </div>
         )}
-
         {/* Empty state - Only show if user has restaurant but no menus */}
         {menus.length === 0 && !loading && hasRestaurant === true && (
           <div className="text-center py-12 px-4">

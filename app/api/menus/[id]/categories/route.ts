@@ -1,10 +1,15 @@
 // app/api/menus/[id]/categories/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { menuCategories, menus, restaurants } from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { menuCategories, menus, restaurants, user } from "@/db/schema";
+import { eq, and, asc, count } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+
+// Helper function to check subscription status
+const hasActiveSubscription = (status: string | null) => {
+  return status === "active";
+};
 
 export async function GET(
   request: NextRequest,
@@ -85,6 +90,17 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get user subscription status
+    const currentUser = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1);
+
+    if (currentUser.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const body = await request.json();
     const { name, description, isActive } = body;
 
@@ -119,6 +135,24 @@ export async function POST(
 
     if (menu.length === 0) {
       return NextResponse.json({ error: "Menu not found" }, { status: 404 });
+    }
+
+    // Check category limit if subscription is not active
+    if (!hasActiveSubscription(currentUser[0].subscriptionStatus)) {
+      const categoryCount = await db
+        .select({ count: count() })
+        .from(menuCategories)
+        .where(eq(menuCategories.menuId, menuId));
+
+      if (categoryCount[0]?.count >= 4) {
+        return NextResponse.json(
+          {
+            error:
+              "Category limit reached. Upgrade your subscription to add more categories.",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Get the current max sort order

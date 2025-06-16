@@ -169,7 +169,17 @@ export default function MenuItemsManagement({
   });
 
   const [ingredientInput, setIngredientInput] = useState("");
+  const [userHasActiveSubscription, setUserHasActiveSubscription] =
+    useState(false);
 
+  useEffect(() => {
+    // Fetch user info
+    fetch("/api/user")
+      .then((res) => res.json())
+      .then((data) =>
+        setUserHasActiveSubscription(data.subscriptionStatus === "active")
+      );
+  }, []);
   useEffect(() => {
     if (menuId) {
       fetchMenuData();
@@ -187,7 +197,24 @@ export default function MenuItemsManagement({
       });
     }
   }, [menuData]);
-
+  // Returns true if all required fields are filled and valid
+  const isItemFormValid = () => {
+    // Name, price, and categoryId are required
+    if (
+      !itemForm.name.trim() ||
+      !itemForm.price.trim() ||
+      !itemForm.categoryId.trim()
+    ) {
+      return false;
+    }
+    // Price must be a valid positive number
+    if (!/^\d+(\.\d{1,2})?$/.test(itemForm.price.trim())) {
+      return false;
+    }
+    return true;
+  };
+  const isCategoryLimitReached =
+    categories.length >= 4 && !userHasActiveSubscription;
   const fetchMenuData = async () => {
     try {
       const response = await fetch(`/api/menus/${menuId}`);
@@ -278,7 +305,16 @@ export default function MenuItemsManagement({
         resetItemForm();
       } else {
         const error = await response.json();
-        toast.error(error.message || "Failed to save item");
+        if (
+          error.error &&
+          error.error.includes("Item limit reached (20 per category)")
+        ) {
+          toast.error(
+            "Item limit reached (20 per category). Upgrade your subscription to add more items."
+          );
+        } else {
+          toast.error(error.message || error.error || "Failed to save item");
+        }
       }
     } catch (error) {
       console.error("Error saving item:", error);
@@ -1042,14 +1078,22 @@ export default function MenuItemsManagement({
                   description: "",
                   isActive: true,
                 });
+
                 setCategoryDialogOpen(true);
               }}
               className="flex items-center gap-2 w-full sm:w-auto"
               size="sm"
+              disabled={isCategoryLimitReached}
             >
               <Plus className="h-4 w-4" />
               Add Category
             </Button>
+            {isCategoryLimitReached && (
+              <div className="text-red-600 text-sm mt-2">
+                Category limit reached. Upgrade your subscription to add more
+                categories.
+              </div>
+            )}
           </div>
 
           {categories.length === 0 ? (
@@ -1185,13 +1229,17 @@ export default function MenuItemsManagement({
                 </Label>
                 <Input
                   id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="^\d+(\.\d{0,2})?$"
                   value={itemForm.price}
-                  onChange={(e) =>
-                    setItemForm({ ...itemForm, price: e.target.value })
-                  }
+                  onChange={(e) => {
+                    // Only allow numbers and up to one decimal point
+                    const value = e.target.value;
+                    if (value === "" || /^\d+(\.\d{0,2})?$/.test(value)) {
+                      setItemForm({ ...itemForm, price: value });
+                    }
+                  }}
                   placeholder="0.00"
                   required
                   className="mt-2"
@@ -1397,7 +1445,7 @@ export default function MenuItemsManagement({
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isItemFormValid()}
                 className="w-full sm:w-auto"
               >
                 {isSubmitting ? (

@@ -695,11 +695,11 @@ function MenuItemCard({
             )}
             <Button
               variant="ghost"
-              size="sm"
+              size="default"
               onClick={onInfoClick}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className=""
             >
-              <Info className="h-4 w-4" />
+              <Info className="h-16 w-16 " />
             </Button>
           </div>
         </div>

@@ -55,7 +55,8 @@ export async function GET(request: NextRequest) {
     const qrCode = menuRows.map((menu) => {
       const qr = qrMap.get(menu.id);
       return {
-        id: qr?.id ?? "", // qrCodeId
+        id: qr?.id ?? "",
+        menuId: menu.id,
         menuName: menu.name,
         menuSlug: menu.slug,
         restaurantName: restaurant.name,
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
         menuUrl: `${
           process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
         }/menu/${menu.id}?qr=${qr?.id ?? ""}`,
-        qrCodeImageUrl: undefined, // If you store image, add here
+        qrCodeImageUrl: undefined,
       };
     });
 

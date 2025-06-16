@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 interface QRCodeData {
   id: string;
+  menuId: string;
   menuName: string;
   menuSlug: string;
   restaurantName: string;
@@ -30,6 +31,11 @@ interface RestaurantData {
 interface QRCodesResponse {
   restaurant: RestaurantData;
   qrCode: QRCodeData[];
+  menus: MenuData;
+}
+
+interface MenuData {
+  id: string;
 }
 
 export default function QRCodesPage() {
@@ -37,6 +43,7 @@ export default function QRCodesPage() {
   const [restaurant, setRestaurant] = useState<RestaurantData | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [menus, setMenus] = useState<MenuData | null>(null);
 
   useEffect(() => {
     fetchQRCodes();
@@ -51,6 +58,7 @@ export default function QRCodesPage() {
       const data: QRCodesResponse = await response.json();
       setQrCodes(data.qrCode);
       setRestaurant(data.restaurant);
+      setMenus(data.menus);
     } catch (error) {
       console.error("Error fetching QR codes:", error);
       toast.error("Failed to load QR codes");
@@ -62,6 +70,23 @@ export default function QRCodesPage() {
   const downloadQRCode = async (qrCode: QRCodeData) => {
     try {
       setDownloadingId(qrCode.id);
+
+      if (!qrCode.menuId) {
+        toast.error("Menu ID is missing for this QR code.");
+        return;
+      }
+      if (!qrCode.restaurantId) {
+        toast.error("Restaurant ID is missing for this QR code.");
+        return;
+      }
+
+      console.log("Generating QR code with:", {
+        menuId: qrCode.menuId,
+        restaurantId: qrCode.restaurantId,
+        url: qrCode.menuUrl,
+        menuName: qrCode.menuName,
+        restaurantName: qrCode.restaurantName,
+      });
 
       const response = await fetch("/api/qr-codes/generate", {
         method: "POST",
@@ -75,10 +100,14 @@ export default function QRCodesPage() {
           restaurantAddress: restaurant?.address,
           restaurantPhone: restaurant?.phone,
           size: 1024,
+          menuId: qrCode.menuId, // <-- always use the actual menu UUID
+          restaurantId: qrCode.restaurantId,
         }),
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("QR code API error:", errorText);
         throw new Error("Failed to generate QR code");
       }
 
@@ -121,12 +150,8 @@ export default function QRCodesPage() {
   };
 
   const getQRCodeImageUrl = (qrCode: QRCodeData) => {
-    // If the user has a stored QR code image, use that
-    if (qrCode.qrCodeImageUrl) {
-      return qrCode.qrCodeImageUrl;
-    }
-    // Fallback to API endpoint that serves the user's QR code
-    return `/api/qr-codes/${qrCode.id}/image`;
+    // Use the minimal QR PNG endpoint
+    return `/api/qr-codes/${qrCode.menuId}/minimal-image`;
   };
 
   if (loading) {

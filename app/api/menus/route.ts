@@ -1,10 +1,12 @@
 // app/api/menus/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { menus, restaurants } from "@/db/schema";
+import { menus, restaurants, user } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { error } from "console";
+import { generateQrForMenu } from "@/lib/generateQrCode";
 
 // Helper function to generate a URL-friendly slug
 function generateSlug(name: string, restaurantId: string): string {
@@ -72,7 +74,26 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       );
     }
+    let userRecord;
+    try {
+      userRecord = await db
+        .select({
+          id: user.id,
+          subscriptionStatus: user.subscriptionStatus,
+        })
+        .from(user)
+        .where(eq(user.id, session.user.id))
+        .limit(1);
+    } catch (dbError) {
+      console.error("Database error fetching user:", dbError);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
 
+    if (!userRecord.length) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const subscriptionStatus = userRecord[0].subscriptionStatus;
     // Get menus for the restaurant with proper ordering
     let userMenus;
     try {
@@ -91,6 +112,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: userMenus,
       total: userMenus.length,
+      subscriptionStatus,
     });
   } catch (error) {
     console.error("Unexpected error in GET /api/menus:", error);
@@ -177,6 +199,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let userRecord;
+    try {
+      userRecord = await db
+        .select({
+          id: user.id,
+          subscriptionStatus: user.subscriptionStatus,
+        })
+        .from(user)
+        .where(eq(user.id, session.user.id))
+        .limit(1);
+    } catch (dbError) {
+      console.error("Database error fetching user:", dbError);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+
+    if (!userRecord.length) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const subscriptionStatus = userRecord[0].subscriptionStatus;
+    if (
+      subscriptionStatus &&
+      ["canceled", "expired", "pending"].includes(
+        subscriptionStatus.toLowerCase()
+      )
+    ) {
+      const menuList = await db
+        .select({ id: menus.id })
+        .from(menus)
+        .where(eq(menus.restaurantId, userRestaurant[0].id));
+
+      if (menuList.length >= 1) {
+        return NextResponse.json(
+          {
+            error:
+              "Free users can only create one menu. Upgrade your subscription to add more.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    //subscription check
+
     // Generate slug if not provided
     const menuSlug =
       slug?.trim() || generateSlug(name.trim(), userRestaurant[0].id);
@@ -226,6 +292,18 @@ export async function POST(request: NextRequest) {
         })
         .returning();
       console.log("Menu created successfully:", newMenu[0]?.id);
+
+      // --- Generate QR code for this menu ---
+      try {
+        await generateQrForMenu({
+          menuId: newMenu[0].id,
+          restaurantId: userRestaurant[0].id,
+        });
+        console.log("QR code generated for menu:", newMenu[0].id);
+      } catch (qrError) {
+        console.error("Failed to generate QR code for menu:", qrError);
+        // Optionally, you can return an error or just log it
+      }
     } catch (dbError) {
       console.error("Database error creating menu:", dbError);
 
