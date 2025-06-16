@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     await db.insert(payments).values({
       userId: session.user.id,
-      amount: planType === "yearly" ? 399900 : 29900, // Amount in paise (₹3999 = 399900 paise, ₹299 = 29900 paise)
+      amount: planType === "yearly" ? 299900 : 29900, // Amount in paise (₹3999 = 299900 paise, ₹299 = 29900 paise)
       currency: "INR",
       status: "COMPLETED",
       razorpayOrderId: razorpay_order_id,

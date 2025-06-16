@@ -186,7 +186,7 @@ const LandingPage = () => {
     },
     {
       name: "Premium",
-      price: billingCycle === "monthly" ? "₹299" : "₹3,999",
+      price: billingCycle === "monthly" ? "₹299" : "₹2,999",
       period: billingCycle === "monthly" ? "/month" : "/year",
       originalPrice: billingCycle === "annual" ? "₹3,588" : null,
       description: "Everything you need to grow",

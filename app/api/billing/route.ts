@@ -44,7 +44,7 @@ export async function GET() {
           status: userInfo.subscriptionStatus.toLowerCase(),
           currentPeriodStart: userInfo.subscriptionStartDate,
           currentPeriodEnd: userInfo.subscriptionEndDate,
-          amount: userInfo.subscriptionType === "YEARLY" ? 399900 : 29900, // Updated amounts in paise
+          amount: userInfo.subscriptionType === "YEARLY" ? 299900 : 29900, // Updated amounts in paise
           currency: "inr",
           interval: userInfo.subscriptionType === "YEARLY" ? "year" : "month",
         }

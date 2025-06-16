@@ -104,7 +104,7 @@ export default function BillingPage() {
     }
 
     setActionLoading(planType);
-    const amount = planType === "yearly" ? 3999 : 299;
+    const amount = planType === "yearly" ? 2999 : 299;
 
     await initializePayment({
       amount,
@@ -128,7 +128,7 @@ export default function BillingPage() {
 
     setActionLoading("renew");
     const planType = subscription.interval === "year" ? "yearly" : "monthly";
-    const amount = planType === "yearly" ? 3999 : 299;
+    const amount = planType === "yearly" ? 2999 : 299;
 
     await initializePayment({
       amount,
@@ -396,7 +396,7 @@ export default function BillingPage() {
                             <td className="py-3 px-4 font-medium">Price</td>
                             <td className="py-3 px-4 text-center">₹0</td>
                             <td className="py-3 px-4 text-center">₹299/mo</td>
-                            <td className="py-3 px-4 text-center">₹3,999/yr</td>
+                            <td className="py-3 px-4 text-center">₹2,999/yr</td>
                           </tr>
                           <tr>
                             <td colSpan={4}>
