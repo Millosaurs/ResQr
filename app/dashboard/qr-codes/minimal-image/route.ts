@@ -6,9 +6,9 @@ import { generateQrPngOnly } from "@/lib/generateQrCode";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { menuId: string } }
+  { params }: { params: Promise<{ menuId: string }> }
 ) {
-  const { menuId } = params;
+  const { menuId } = await params;
 
   // Fetch menu to get the URL
   const [menu] = await db
