@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import QRCode from "qrcode";
-import { createCanvas, loadImage } from "canvas";
 import { db } from "@/db";
 import { menus, qrCodes, restaurants } from "@/db/schema";
 import { eq } from "drizzle-orm";
